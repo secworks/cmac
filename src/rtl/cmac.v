@@ -85,6 +85,12 @@ module cmac(
   localparam CORE_VERSION     = 32'h302e3031; // "0.01"
 
 
+  localparam BMUX_ZERO        = 0;
+  localparam BMUX_MESSAGE     = 1;
+  localparam BMUX_XOR_MESSAGE = 2;
+  localparam BMUX_XOR_TWEAK   = 3;
+
+
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
@@ -127,7 +133,7 @@ module cmac(
   wire           core_ready;
   wire [255 : 0] core_key;
   wire           core_keylen;
-  wire [127 : 0] core_block;
+  reg  [127 : 0] core_block;
   wire [127 : 0] core_result;
   wire           core_valid;
 
@@ -140,7 +146,6 @@ module cmac(
   assign core_key = {key_reg[0], key_reg[1], key_reg[2], key_reg[3],
                      key_reg[4], key_reg[5], key_reg[6], key_reg[7]};
 
-  assign core_block  = {block_reg[0], block_reg[1], block_reg[2], block_reg[3]};
   assign core_init   = init_reg;
   assign core_next   = next_reg;
   assign core_encdec = encdec_reg;
@@ -278,6 +283,46 @@ module cmac(
             end
         end
     end // addr_decoder
+
+
+  //----------------------------------------------------------------
+  // cmac_datapath
+  //
+  // The cmac datapath. Basically a mux for the input data block
+  // to the AES core and som xor gates for the logic.
+  //----------------------------------------------------------------
+  always @*
+    begin : cmac_datapath
+      reg [127 : 0] tweak;
+
+      case (bmux_ctrl)
+        BMUX_ZERO:
+          core_block = 128'h0;
+
+        BMUX_MESSAGE:
+          core_block  = {block_reg[0], block_reg[1],
+                         block_reg[2], block_reg[3]};
+
+        BMUX_XOR_MESSAGE:
+          core_block  = result_reg ^ {block_reg[0], block_reg[1],
+                                      block_reg[2], block_reg[3]};
+
+        BMUX_XOR_TWEAK:
+          core_block  = result_reg ^ tweak;
+      endcase // case (bmux_ctrl)
+    end
+
+
+  //----------------------------------------------------------------
+  // cmac_ctrl
+  //
+  // The FSM controlling the cmacm functionality.
+  //----------------------------------------------------------------
+  always @*
+    begin : cmac_ctrl
+
+    end
+
 endmodule // cmac
 
 //======================================================================
