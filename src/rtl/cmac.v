@@ -93,6 +93,8 @@ module cmac(
   localparam CTRL_INIT  = 1;
   localparam CTRL_TWEAK = 2;
 
+  localparam R128 = {120'h0, 8'b10000111};
+
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -307,6 +309,18 @@ module cmac(
     begin : cmac_datapath
       reg [127 : 0] tweak;
 
+      // Subkey k1 and k2 generation.
+      if (!core_result[127])
+        k1_new = {core_result[126 : 0], core_result[127]};
+      else
+        k1_new = {core_result[126 : 0], core_result[127]} ^ R128;
+
+      if (!k1_new[127])
+        k2_new = {k1_new[126 : 0], k1_new[127]};
+      else
+        k2_new = {k1_new[126 : 0], k1_new[127]} ^ R128;
+
+
       case (bmux_ctrl)
         BMUX_ZERO:
           core_block = 128'h0;
@@ -335,6 +349,8 @@ module cmac(
       core_init     = 0;
       core_next     = 0;
       bmux_ctrl     = 2'h0;
+      k1_we         = 0;
+      k2_we         = 0;
       cmac_ctrl_new = CTRL_IDLE;
       cmac_ctrl_we  = 0;
 
