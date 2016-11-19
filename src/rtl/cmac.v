@@ -84,11 +84,12 @@ module cmac(
   localparam CORE_NAME1       = 32'h2d616573; // "-aes"
   localparam CORE_VERSION     = 32'h302e3031; // "0.01"
 
-
   localparam BMUX_ZERO        = 0;
   localparam BMUX_MESSAGE     = 1;
   localparam BMUX_XOR_MESSAGE = 2;
   localparam BMUX_XOR_TWEAK   = 3;
+
+  localparam CTRL_IDLE = 0;
 
 
   //----------------------------------------------------------------
@@ -136,6 +137,8 @@ module cmac(
   reg  [127 : 0] core_block;
   wire [127 : 0] core_result;
   wire           core_valid;
+
+  reg [1 : 0]    bmux_ctrl;
 
 
   //----------------------------------------------------------------
@@ -244,7 +247,7 @@ module cmac(
               if ((address >= ADDR_KEY0) && (address <= ADDR_KEY7))
                 key_we = 1;
 
-              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK7))
+              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK3))
                 key_we = 1;
 
               case (address)
@@ -320,7 +323,17 @@ module cmac(
   //----------------------------------------------------------------
   always @*
     begin : cmac_ctrl
+      bmux_ctrl     = 2'h0;
+      cmac_ctrl_new = CTRL_IDLE;
+      cmac_ctrl_we  = 0;
 
+      case (cmac_ctrl_reg)
+        CTRL_IDLE:
+          begin
+            cmac_ctrl_new = CTRL_IDLE;
+            cmac_ctrl_we  = 0;
+          end
+      endcase // case (cmac_ctrl_reg)
     end
 
 endmodule // cmac
