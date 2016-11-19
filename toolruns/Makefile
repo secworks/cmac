@@ -36,12 +36,14 @@
 #
 #===================================================================
 
-SBOX_SRC=../src/rtl/aes_sbox.v
-INV_SBOX_SRC=../src/rtl/aes_inv_sbox.v
-KEYMEM_SRC=../src/rtl/aes_key_mem.v
-ENCIPHER_SRC=../src/rtl/aes_encipher_block.v
-DECIPHER_SRC=../src/rtl/aes_decipher_block.v
-CORE_SRC=../src/rtl/aes_core.v $(KEYMEM_SRC) $(SBOX_SRC) $(INV_SBOX_SRC) $(ENCIPHER_SRC) $(DECIPHER_SRC)
+AES_CORE_SW_DIR=../../aes/src/rtl
+
+SBOX_SRC=$(AES_CORE_SW_DIR)/aes_sbox.v
+INV_SBOX_SRC=$(AES_CORE_SW_DIR)/aes_inv_sbox.v
+KEYMEM_SRC=$(AES_CORE_SW_DIR)/aes_key_mem.v
+ENCIPHER_SRC=$(AES_CORE_SW_DIR)/aes_encipher_block.v
+DECIPHER_SRC=$(AES_CORE_SW_DIR)/aes_decipher_block.v
+CORE_SRC=$(AES_CORE_SW_DIR)/aes_core.v $(KEYMEM_SRC) $(SBOX_SRC) $(INV_SBOX_SRC) $(ENCIPHER_SRC) $(DECIPHER_SRC)
 
 TOP_SRC=../src/rtl/cmac.v $(CORE_SRC)
 TB_TOP_SRC =../src/tb/tb_cmac.v
