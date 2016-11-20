@@ -89,8 +89,9 @@ module cmac(
   localparam BMUX_XOR_MESSAGE = 2;
   localparam BMUX_XOR_TWEAK   = 3;
 
-  localparam CTRL_IDLE  = 0;
-  localparam CTRL_INIT  = 1;
+  localparam CTRL_IDLE      = 0;
+  localparam CTRL_GEN_KEYS  = 1;
+  localparam CTRL_KEYS_DONE = 2;
   localparam CTRL_TWEAK = 2;
 
   localparam R128 = {120'h0, 8'b10000111};
@@ -119,11 +120,9 @@ module cmac(
 
   reg [127 : 0] k1_reg;
   reg [127 : 0] k1_new;
-  reg           k1_we;
-
   reg [127 : 0] k2_reg;
   reg [127 : 0] k2_new;
-  reg           k2_we;
+  reg           k1_k2_we;
 
 
   //----------------------------------------------------------------
@@ -215,11 +214,11 @@ module cmac(
           valid_reg  <= core_valid;
           result_reg <= core_result;
 
-          if (k1_we)
-            k1_reg <= k1_new;
-
-          if (k2_we)
-            k2_reg <= k2_new;
+          if (k1_k2_we)
+            begin
+              k1_reg <= k1_new;
+              k2_reg <= k2_new;
+            end
 
           if (config_we)
             begin
@@ -348,17 +347,31 @@ module cmac(
     begin : cmac_ctrl
       core_init     = 0;
       core_next     = 0;
-      bmux_ctrl     = 2'h0;
-      k1_we         = 0;
-      k2_we         = 0;
+      bmux_ctrl     = BMUX_ZERO;
+      k1_k2_we      = 0;
       cmac_ctrl_new = CTRL_IDLE;
       cmac_ctrl_we  = 0;
 
       case (cmac_ctrl_reg)
         CTRL_IDLE:
           begin
-            cmac_ctrl_new = CTRL_IDLE;
-            cmac_ctrl_we  = 0;
+            if (init)
+              begin
+                core_init     = 1;
+                bmux_ctrl     = BMUX_ZERO;
+                cmac_ctrl_new = CTRL_GEN_KEYS;
+                cmac_ctrl_we  = 1;
+              end
+          end
+
+        CTRL_GEN_KEYS:
+          begin
+            if (core_ready)
+              begin
+                k1_k2_we      = 1;
+                cmac_ctrl_new = CTRL_IDLE;
+                cmac_ctrl_we  = 1;
+              end
           end
       endcase // case (cmac_ctrl_reg)
     end
