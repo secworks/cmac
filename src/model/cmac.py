@@ -57,28 +57,25 @@ VERBOSE = True
 
 
 #-------------------------------------------------------------------
-# test_aes()
+#-------------------------------------------------------------------
+def cmac(key, message):
+    # Start by generating the subkeys
+    key_block = aes_encipher_block(key, (0, 0, 0, 0))
+    print("Result from zero block encryption:")
+    print_block(key_block)
+
+
+#-------------------------------------------------------------------
+# test_cmac()
 #
-# Test the AES implementation with 128 and 256 bit keys.
+# Test the CMAC implementation with NIST test vectors from:
+# http://csrc.nist.gov/groups/ST/toolkit/documents/Examples/AES_CMAC.pdf
 #-------------------------------------------------------------------
 def test_cmac():
-    nist_aes128_key = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
-    nist_plaintext0 = (0x6bc1bee2, 0x2e409f96, 0xe93d7e11, 0x7393172a)
-    nist_exp128_0   = (0x3ad77bb4, 0x0d7a3660, 0xa89ecaf3, 0x2466ef97)
+    nist_key128 = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
 
-    enc_result128_0 = aes_encipher_block(nist_aes128_key, nist_plaintext0)
-
-    print("Key:")
-    print_key(nist_aes128_key)
-    print("Block in:")
-    print_block(nist_plaintext0)
-    print("Expected block out:")
-    print_block(nist_exp128_0)
-    print("Got block out:")
-    print_block(enc_result128_0)
-    if (enc_result128_0 == enc_result128_0):
-        print("Correct ciphertext generated.")
-    print()
+    message = ""
+    cmac(nist_key128, message)
 
 
 #-------------------------------------------------------------------
