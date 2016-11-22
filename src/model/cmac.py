@@ -54,15 +54,59 @@ from aes import *
 # Constants.
 #-------------------------------------------------------------------
 VERBOSE = True
+R128 = (0x00000000, 0x00000000, 0x00000000, 0x10000111)
+MAX128 = ((2**128) - 1)
+
+#-------------------------------------------------------------------
+#-------------------------------------------------------------------
+def xor_words(a, b):
+    return (a[0] ^ b[0], a[1] ^ b[1], a[2] ^ b[2], a[3] ^ b[3])
+
+#-------------------------------------------------------------------
+# shift_words
+#-------------------------------------------------------------------
+def shift_words(wl):
+    print("wl:")
+    print_block(wl)
+    w = ((wl[0] << 96) + (wl[1] << 64) + (wl[2] << 32) + wl[3]) & MAX128
+    print("w:  0x%032x" % w)
+    ws = w << 1 & MAX128
+    print("ws: 0x%032x" % ws)
+    return ((ws >> 96) & 0xffffffff, (ws >> 64) & 0xffffffff,
+            (ws >> 32) & 0xffffffff, ws & 0xffffffff)
 
 
 #-------------------------------------------------------------------
+# cmac()
+#
+# Notation follows the description in SP 800-38B
 #-------------------------------------------------------------------
 def cmac(key, message):
     # Start by generating the subkeys
-    key_block = aes_encipher_block(key, (0, 0, 0, 0))
+    L = aes_encipher_block(key, (0, 0, 0, 0))
     print("Result from zero block encryption:")
-    print_block(key_block)
+    print_block(L)
+
+    # Calculating the k1 and k2 tweak keys.
+    MSBL = (L[0] >> 31) & 0x01
+    print("MSBL = 0x%01x" % MSBL)
+    if MSBL:
+        K1 = xor_words(shift_words(L), R128)
+    else:
+        K1 = shift_words(L)
+    print("K1:")
+    print_block(K1)
+    print()
+
+    MSBK1 = (K1[0] >> 31) & 0x01
+    print("MSBK1 = 0x%01x" % MSBK1)
+    if MSBK1:
+        K2 = xor_words(shift_words(K1), R128)
+    else:
+        K2 = shift_words(K1)
+    print("K2:")
+    print_block(K2)
+    print()
 
 
 #-------------------------------------------------------------------
@@ -73,7 +117,6 @@ def cmac(key, message):
 #-------------------------------------------------------------------
 def test_cmac():
     nist_key128 = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
-
     message = ""
     cmac(nist_key128, message)
 
