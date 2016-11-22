@@ -8,6 +8,10 @@
 # word based model of the AES cipher withsupport for 128 and
 # 256 bit keys.
 #
+# Test vectors used in the tests are from the NIST specification:
+# http://csrc.nist.gov/groups/ST/toolkit/documents/Examples/AES_CMAC.pdf
+#
+#
 #
 # Author: Joachim Strömbergson
 # Copyright (c) 2016, Secworks Sweden AB
@@ -53,7 +57,7 @@ from aes import *
 #-------------------------------------------------------------------
 # Constants.
 #-------------------------------------------------------------------
-VERBOSE = True
+VERBOSE = False
 R128 = (0x00000000, 0x00000000, 0x00000000, 0x10000111)
 MAX128 = ((2**128) - 1)
 
@@ -119,13 +123,43 @@ def cmac(key, message):
 #-------------------------------------------------------------------
 # test_cmac()
 #
-# Test the CMAC implementation with NIST test vectors from:
-# http://csrc.nist.gov/groups/ST/toolkit/documents/Examples/AES_CMAC.pdf
 #-------------------------------------------------------------------
 def test_cmac():
     nist_key128 = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
     message = ""
     cmac(nist_key128, message)
+
+
+#-------------------------------------------------------------------
+#-------------------------------------------------------------------
+def test_cmac_subkey_gen():
+    nist_key128 = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
+    nist_exp_k1 = (0xfbeed618, 0x35713366, 0x7c85e08f, 0x7236a8de)
+    nist_exp_k2 = (0xf7ddac30, 0x6ae266cc, 0xf90bc11e, 0xe46d513b)
+
+    (K1, K2) = cmac_gen_subkeys(nist_key128)
+
+    print("*** Testing CMAC subkey generation ***")
+    correct = True
+    if (K1 != nist_exp_k1):
+        correct = False
+        print("Error in K1 subkey generation.")
+        print("Expected:")
+        print_block(nist_exp_k1)
+        print("Got:")
+        print_block(K1)
+
+    if (K2 != nist_exp_k2):
+        correct = False
+        print("Error in K2 subkey generation.")
+        print("Expected:")
+        print_block(nist_exp_k2)
+        print("Got:")
+        print_block(K2)
+
+    if correct:
+        print("K1 and K2 subkey generation correct.")
+    print()
 
 
 #-------------------------------------------------------------------
@@ -138,7 +172,8 @@ def main():
     print("=========================")
     print
 
-    test_cmac()
+    test_cmac_subkey_gen()
+#    test_cmac()
 
 
 #-------------------------------------------------------------------
