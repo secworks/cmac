@@ -66,14 +66,44 @@ def xor_words(a, b):
 # shift_words
 #-------------------------------------------------------------------
 def shift_words(wl):
-    print("wl:")
-    print_block(wl)
     w = ((wl[0] << 96) + (wl[1] << 64) + (wl[2] << 32) + wl[3]) & MAX128
-    print("w:  0x%032x" % w)
     ws = w << 1 & MAX128
-    print("ws: 0x%032x" % ws)
     return ((ws >> 96) & 0xffffffff, (ws >> 64) & 0xffffffff,
             (ws >> 32) & 0xffffffff, ws & 0xffffffff)
+
+
+#-------------------------------------------------------------------
+#-------------------------------------------------------------------
+def cmac_gen_subkeys(key):
+    L = aes_encipher_block(key, (0, 0, 0, 0))
+
+    MSBL = (L[0] >> 31) & 0x01
+    if MSBL:
+        K1 = xor_words(shift_words(L), R128)
+    else:
+        K1 = shift_words(L)
+
+    MSBK1 = (K1[0] >> 31) & 0x01
+    if MSBK1:
+        K2 = xor_words(shift_words(K1), R128)
+    else:
+        K2 = shift_words(K1)
+
+    if VERBOSE:
+        print("Internal data during sub key generation")
+        print("---------------------------------------")
+        print("L:")
+        print_block(L)
+
+        print("MSBL = 0x%01x" % MSBL)
+        print("K1:")
+        print_block(K1)
+        print("MSBK1 = 0x%01x" % MSBK1)
+        print("K2:")
+        print_block(K2)
+        print()
+
+    return (K1, K2)
 
 
 #-------------------------------------------------------------------
@@ -83,30 +113,7 @@ def shift_words(wl):
 #-------------------------------------------------------------------
 def cmac(key, message):
     # Start by generating the subkeys
-    L = aes_encipher_block(key, (0, 0, 0, 0))
-    print("Result from zero block encryption:")
-    print_block(L)
-
-    # Calculating the k1 and k2 tweak keys.
-    MSBL = (L[0] >> 31) & 0x01
-    print("MSBL = 0x%01x" % MSBL)
-    if MSBL:
-        K1 = xor_words(shift_words(L), R128)
-    else:
-        K1 = shift_words(L)
-    print("K1:")
-    print_block(K1)
-    print()
-
-    MSBK1 = (K1[0] >> 31) & 0x01
-    print("MSBK1 = 0x%01x" % MSBK1)
-    if MSBK1:
-        K2 = xor_words(shift_words(K1), R128)
-    else:
-        K2 = shift_words(K1)
-    print("K2:")
-    print_block(K2)
-    print()
+    (K1, K2) = cmac_gen_subkeys(key)
 
 
 #-------------------------------------------------------------------
