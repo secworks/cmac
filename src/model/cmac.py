@@ -57,7 +57,7 @@ from aes import *
 #-------------------------------------------------------------------
 # Constants.
 #-------------------------------------------------------------------
-VERBOSE = False
+VERBOSE = True
 R128 = (0x00000000, 0x00000000, 0x00000000, 0x10000111)
 MAX128 = ((2**128) - 1)
 
@@ -125,7 +125,20 @@ def cmac(key, message):
 #
 #-------------------------------------------------------------------
 def test_cmac():
-    nist_key128 = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
+    nist_key128  = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
+    expect_1_128 = (0xbb1d6929, 0xe9593728, 0x7fa37d12, 0x9b756746)
+    expect_2_128 = (0x070a16b4, 0x6b4d4144, 0xf79bdd9d, 0xd04a287c)
+    expect_3_128 = (0x7d85449e, 0xa6ea19c8, 0x23a7bf78, 0x837dfade)
+    expect_4_128 = (0x51f0bebf, 0x7e3b9d92, 0xfc497417, 0x79363cfe)
+
+    nist_key256  = (0x603deb10, 0x15ca71be, 0x2b73aef0, 0x857d7781,
+                    0x1f352c07, 0x3b6108d7, 0x2d9810a3, 0x0914dff4)
+    expect_1_256 = (0x028962f6, 0x1b7bf89e, 0xfc6b551f, 0x4667d983)
+    expect_2_256 = (0x28a7023f, 0x452e8f82, 0xbd4bf28d, 0x8c37c35c)
+    expect_3_256 = (0x156727dc, 0x0878944a, 0x023c1fe0, 0x3bad6d93)
+    expect_4_256 = (0xe1992190, 0x549f6ed5, 0x696a2c05, 0x6c315410)
+
+
     message = ""
     cmac(nist_key128, message)
 
