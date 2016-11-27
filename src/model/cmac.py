@@ -131,6 +131,10 @@ def test_cmac():
 
 
 #-------------------------------------------------------------------
+# test_cmac_subkey_gen()
+#
+# Test the subkey functionality by itself. Testvectors are
+# from the first examples in NISTs test case suite.
 #-------------------------------------------------------------------
 def test_cmac_subkey_gen():
     nist_key128 = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
