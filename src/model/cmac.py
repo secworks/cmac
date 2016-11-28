@@ -64,7 +64,14 @@ MAX128 = ((2**128) - 1)
 #-------------------------------------------------------------------
 #-------------------------------------------------------------------
 def xor_words(a, b):
-    return (a[0] ^ b[0], a[1] ^ b[1], a[2] ^ b[2], a[3] ^ b[3])
+    c = (a[0] ^ b[0], a[1] ^ b[1], a[2] ^ b[2], a[3] ^ b[3])
+    if VERBOSE:
+        print("XORing words in the following two 128 bit block gives the result:.")
+        print_block(a)
+        print_block(b)
+        print_block(c)
+    return c
+
 
 #-------------------------------------------------------------------
 # shift_words
@@ -81,17 +88,15 @@ def shift_words(wl):
 def cmac_gen_subkeys(key):
     L = aes_encipher_block(key, (0, 0, 0, 0))
 
+    K1 = shift_words(L)
     MSBL = (L[0] >> 31) & 0x01
     if MSBL:
-        K1 = xor_words(shift_words(L), R128)
-    else:
-        K1 = shift_words(L)
+        K1 = xor_words(K1, R128)
 
+    K2 = shift_words(K1)
     MSBK1 = (K1[0] >> 31) & 0x01
     if MSBK1:
-        K2 = xor_words(shift_words(K1), R128)
-    else:
-        K2 = shift_words(K1)
+        K2 = xor_words(K2, R128)
 
     if VERBOSE:
         print("Internal data during sub key generation")
@@ -142,6 +147,16 @@ def test_cmac():
     message = ""
     cmac(nist_key128, message)
 
+#-------------------------------------------------------------------
+# test_xor()
+#-------------------------------------------------------------------
+def test_xor():
+    print("*** Testing XOR words ***")
+    a = (0x00000000, 0x55555555, 0xaaaaaaaa, 0xff00ff00)
+    b = (0xdeadbeef, 0xaa00aa00, 0x55555555, 0xffffffff)
+    c = xor_words(a , b)
+    print_block(c)
+
 
 #-------------------------------------------------------------------
 # test_cmac_subkey_gen()
@@ -189,6 +204,7 @@ def main():
     print("=========================")
     print
 
+    test_xor()
     test_cmac_subkey_gen()
 #    test_cmac()
 
