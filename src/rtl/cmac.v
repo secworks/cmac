@@ -237,7 +237,7 @@ module cmac(
             end
 
           if (final_size_we)
-            final_size_reg <= write_data[6 : 0];
+            final_size_reg <= write_data[7 : 0];
 
           if (key_we)
             key_reg[address[2 : 0]] <= write_data;
