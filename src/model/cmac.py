@@ -58,10 +58,12 @@ from aes import *
 # Constants.
 #-------------------------------------------------------------------
 VERBOSE = True
-R128 = (0x00000000, 0x00000000, 0x00000000, 0x10000111)
+R128 = (0, 0, 0, 0x00000087)
 MAX128 = ((2**128) - 1)
 
+
 #-------------------------------------------------------------------
+# xor_words()
 #-------------------------------------------------------------------
 def xor_words(a, b):
     c = (a[0] ^ b[0], a[1] ^ b[1], a[2] ^ b[2], a[3] ^ b[3])
@@ -74,7 +76,7 @@ def xor_words(a, b):
 
 
 #-------------------------------------------------------------------
-# shift_words
+# shift_words()
 #-------------------------------------------------------------------
 def shift_words(wl):
     w = ((wl[0] << 96) + (wl[1] << 64) + (wl[2] << 32) + wl[3]) & MAX128
@@ -84,19 +86,25 @@ def shift_words(wl):
 
 
 #-------------------------------------------------------------------
+# cmac_gen_subkeys()
 #-------------------------------------------------------------------
 def cmac_gen_subkeys(key):
     L = aes_encipher_block(key, (0, 0, 0, 0))
 
-    K1 = shift_words(L)
+    Pre_K1 = shift_words(L)
     MSBL = (L[0] >> 31) & 0x01
     if MSBL:
-        K1 = xor_words(K1, R128)
+        K1 = xor_words(Pre_K1, R128)
+    else:
+        K1 = Pre_K1
 
-    K2 = shift_words(K1)
+
+    Pre_K2 = shift_words(K1)
     MSBK1 = (K1[0] >> 31) & 0x01
     if MSBK1:
-        K2 = xor_words(K2, R128)
+        K2 = xor_words(Pre_K2, R128)
+    else:
+        K2 = Pre_K2
 
     if VERBOSE:
         print("Internal data during sub key generation")
@@ -105,9 +113,13 @@ def cmac_gen_subkeys(key):
         print_block(L)
 
         print("MSBL = 0x%01x" % MSBL)
+        print("Pre_K1:")
+        print_block(Pre_K1)
         print("K1:")
         print_block(K1)
         print("MSBK1 = 0x%01x" % MSBK1)
+        print("Pre_K2:")
+        print_block(Pre_K2)
         print("K2:")
         print_block(K2)
         print()
