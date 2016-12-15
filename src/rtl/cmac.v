@@ -285,7 +285,7 @@ module cmac(
                     finalize = write_data[CTRL_FINAL_BIT];
                   end
 
-                ADDR_CONFIG:     config_we = 1;
+                ADDR_CONFIG:     config_we     = 1;
                 ADDR_FINAL_SIZE: final_size_we = 1;
 
                 default:
