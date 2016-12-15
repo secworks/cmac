@@ -101,6 +101,7 @@ module cmac(
   localparam CTRL_DONE        = 7;
 
   localparam R128 = {120'h0, 8'b10000111};
+  localparam AES_BLOCK_SIZE = 128;
 
 
   //----------------------------------------------------------------
@@ -326,6 +327,15 @@ module cmac(
   always @*
     begin : cmac_datapath
       reg [127 : 0] tweak;
+      reg [127 : 0] padded_block;
+      reg [127 : 0] tweaked_block;
+      reg [002 : 0] b1;
+      reg [006 : 0] b2;
+      reg [014 : 0] b3;
+      reg [030 : 0] b4;
+      reg [062 : 0] b5;
+      reg [126 : 0] b6;
+
 
       // Subkey k1 and k2 generation.
       if (!core_result[127])
@@ -337,6 +347,49 @@ module cmac(
         k2_new = {k1_new[126 : 0], k1_new[127]};
       else
         k2_new = {k1_new[126 : 0], k1_new[127]} ^ R128;
+
+
+      // Padding of final block. We create an AND mask that preserves
+      // the data in the block and zeroise all other bits. We add
+      // a one to bit 127.
+      if (final_size_reg[1])
+        b1 = {final_size_reg[0], {2{1'b1}}};
+      else
+        b1 = {{2{1'b0}}, final_size_reg[0]};
+
+      if (final_size_reg[2])
+        b2 = {b1, {4{1'b1}}};
+      else
+        b2 = {{4{1'b0}}, b1};
+
+      if (final_size_reg[3])
+        b3 = {b2, {8{1'b1}}};
+      else
+        b3 = {{8{1'b0}}, b2};
+
+      if (final_size_reg[4])
+        b4 = {b3, {16{1'b1}}};
+      else
+        b4 = {{16{1'b0}}, b3};
+
+      if (final_size_reg[5])
+        b5 = {b4, {32{1'b1}}};
+      else
+        b5 = {{32{1'b0}}, b4};
+
+      if (final_size_reg[6])
+        b6 = {b5, {64{1'b1}}};
+      else
+        b6 = {{64{1'b0}}, b5};
+
+      padded_block = {1'b1, b6 & {block_reg[0], block_reg[1], block_reg[2], block_reg[3]}};
+
+
+      // Tweak of final block. based on if the final block is full or not.
+      if (final_size_reg == AES_BLOCK_SIZE)
+        tweaked_block = k1_reg ^ {block_reg[0], block_reg[1], block_reg[2], block_reg[3]};
+      else
+        tweaked_block = k2_reg ^ padded_block;
 
 
       case (bmux_ctrl)
