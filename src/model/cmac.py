@@ -86,6 +86,17 @@ def shift_words(wl):
 
 
 #-------------------------------------------------------------------
+# pad_block()
+#
+# Pad a given block with the "1000...." paddning as given by the
+# bitlen. Note that bitlen is assumed to be in the
+# range [0..127]
+#-------------------------------------------------------------------
+def pad_block(block, bitlen):
+    pass
+
+
+#-------------------------------------------------------------------
 # cmac_gen_subkeys()
 #-------------------------------------------------------------------
 def cmac_gen_subkeys(key):
@@ -170,6 +181,8 @@ def test_xor():
     print_block(c)
 
 
+
+
 #-------------------------------------------------------------------
 # test_cmac_subkey_gen()
 #
@@ -207,6 +220,24 @@ def test_cmac_subkey_gen():
 
 
 #-------------------------------------------------------------------
+# test_final()
+#
+# Test final tweak.
+#-------------------------------------------------------------------
+def test_final():
+    key = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
+    final_block = (0x80000000, 0x00000000, 0x00000000, 0x00000000)
+    k2 =          (0xf7ddac30, 0x6ae266cc, 0xf90bc11e, 0xe46d513b)
+    tweaked_final = xor_words(final_block, k2)
+    M = aes_encipher_block(key, tweaked_final)
+    expected = (0xbb1d6929, 0xe9593728, 0x7fa37d12, 0x9b756746)
+    print("Tag generated from final block:")
+    print_block(M)
+    print("Expected:")
+    print_block(expected)
+
+
+#-------------------------------------------------------------------
 # main()
 #
 # If executed tests the ChaCha class using known test vectors.
@@ -218,6 +249,7 @@ def main():
 
     test_xor()
     test_cmac_subkey_gen()
+    test_final()
 #    test_cmac()
 
 
