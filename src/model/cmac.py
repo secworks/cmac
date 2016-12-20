@@ -63,6 +63,24 @@ MAX128 = ((2**128) - 1)
 
 
 #-------------------------------------------------------------------
+# check_block()
+#
+# Check and report if a result block matches expected block.
+#-------------------------------------------------------------------
+def check_block(expected, result):
+    if (expected[0] == result[0]) and  (expected[1] == result[1]) and\
+         (expected[2] == result[2]) and  (expected[3] == result[3]):
+        print("OK. Result matches expected.")
+    else:
+        print("ERROR. Result does not match expected.")
+        print("Expected:")
+        print_block(expected)
+        print("Got:")
+        print_block(result)
+        print("")
+
+
+#-------------------------------------------------------------------
 # xor_words()
 #-------------------------------------------------------------------
 def xor_words(a, b):
@@ -98,6 +116,8 @@ def pad_block(block, bitlen):
 
 #-------------------------------------------------------------------
 # cmac_gen_subkeys()
+#
+# Generate subkeys K1 and K2.
 #-------------------------------------------------------------------
 def cmac_gen_subkeys(key):
     L = aes_encipher_block(key, (0, 0, 0, 0))
@@ -197,26 +217,10 @@ def test_cmac_subkey_gen():
     (K1, K2) = cmac_gen_subkeys(nist_key128)
 
     print("*** Testing CMAC subkey generation ***")
-    correct = True
-    if (K1 != nist_exp_k1):
-        correct = False
-        print("Error in K1 subkey generation.")
-        print("Expected:")
-        print_block(nist_exp_k1)
-        print("Got:")
-        print_block(K1)
-
-    if (K2 != nist_exp_k2):
-        correct = False
-        print("Error in K2 subkey generation.")
-        print("Expected:")
-        print_block(nist_exp_k2)
-        print("Got:")
-        print_block(K2)
-
-    if correct:
-        print("K1 and K2 subkey generation correct.")
-    print()
+    print("Checking key K1")
+    check_block(K1, nist_exp_k1)
+    print("Checking key K2")
+    check_block(K2, nist_exp_k2)
 
 
 #-------------------------------------------------------------------
@@ -231,10 +235,7 @@ def test_final():
     tweaked_final = xor_words(final_block, k2)
     M = aes_encipher_block(key, tweaked_final)
     expected = (0xbb1d6929, 0xe9593728, 0x7fa37d12, 0x9b756746)
-    print("Tag generated from final block:")
-    print_block(M)
-    print("Expected:")
-    print_block(expected)
+    check_block(expected, M)
 
 
 #-------------------------------------------------------------------
