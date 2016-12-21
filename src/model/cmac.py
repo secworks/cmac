@@ -86,7 +86,7 @@ def check_block(expected, result):
 def xor_words(a, b):
     c = (a[0] ^ b[0], a[1] ^ b[1], a[2] ^ b[2], a[3] ^ b[3])
     if VERBOSE:
-        print("XORing words in the following two 128 bit block gives the result:.")
+        print("XORing words in the following two 128 bit block gives the result:")
         print_block(a)
         print_block(b)
         print_block(c)
