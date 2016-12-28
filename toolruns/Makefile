@@ -48,19 +48,26 @@ CORE_SRC=$(AES_CORE_SW_DIR)/aes_core.v $(KEYMEM_SRC) $(SBOX_SRC) $(INV_SBOX_SRC)
 TOP_SRC=../src/rtl/cmac.v $(CORE_SRC)
 TB_TOP_SRC =../src/tb/tb_cmac.v
 
+PADDING_SRC=../src/rtl/cmac_padding.v
+
 CC=iverilog
 LINT=verilator
 
 
-all: top.sim
+all: padding.sim top.sim
 
 top.sim: $(TB_TOP_SRC) $(TOP_SRC)
 	$(CC) -o top.sim $(TB_TOP_SRC) $(TOP_SRC)
 
 
+padding.sim: $(PADDING_SRC)
+	$(CC) -o padding.sim $(PADDING_SRC)
+
 sim-top: top.sim
 	./top.sim
 
+sim-padding: padding.sim
+	./padding.sim
 
 lint:
 	verilator +1364-2001ext+ --lint-only -Wall $(TOP_SRC)
@@ -68,6 +75,7 @@ lint:
 
 clean:
 	rm -f top.sim
+	rm -f padding.sim
 
 
 help:
