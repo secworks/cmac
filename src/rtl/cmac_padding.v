@@ -2,7 +2,12 @@
 //
 // cmac_padding.v
 // --------------
-// Test logic to generate padding.
+// Test logic to generate padding. The format of the padding is
+// given in RFC 4493 and the NIST SP 800-38B specs. Basically
+// pad the last block with the bits int the lat block followed
+// by a one and as many zeros as needed to fill the final
+// block. For a message of zero length, the block after padding
+// is {1'b1, 127'b0}
 //
 //
 // Author: Joachim Strombergson
@@ -102,17 +107,26 @@ module cmac_padding();
   endtask // pad_mask
 
 
-  Initial
-    begin : padding
+  //----------------------------------------------------------------
+  // test_padding
+  //----------------------------------------------------------------
+  initial
+    begin : test_padding
       reg [7 : 0]  length;
       reg [126 : 0] mask;
 
+      reg [127 : 0] block_in;
+      reg [127 : 0] block_out;
+
+      block_in = 128'h5555555_55555555_55555555_555555555;
+
+      $display("Testing padding.");
       for (length = 0 ; length < 128 ; length = length + 1)
         begin
-          pad_mask(length, mask);
-          $display("pad mask for length %03d: 0b%0127b", length, mask);
+          pad_block(length, block_in, block_out);
+          $display("padded block for length %03d: 0b%0128b", length, block_out);
         end
-    end // padding
+    end // test_padding
 
 endmodule // cmac_padding
 
