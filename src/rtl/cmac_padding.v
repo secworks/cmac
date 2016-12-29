@@ -52,8 +52,39 @@ module cmac_padding();
   task pad_block(input [6 : 0] length, input [127 : 0] block_in,
                  output [127 : 0] block_out);
     begin : pad
+      reg [255 : 0] padded;
+      padded = {block_in, 1'b1, 127'b0};
+      $display("padded: 0b%0256b", padded);
 
-      block_out = block_in;
+      if (!length[0])
+        padded = {padded[255 : (128 + 1)], 1'b0};
+      $display("padded: 0b%0256b", padded);
+
+      if (!length[1])
+        padded = {padded[255 : (128 + 2)], 2'b0};
+      $display("padded: 0b%0256b", padded);
+
+      if (!length[2])
+        padded = {padded[255 : (128 + 4)], 4'b0};
+      $display("padded: 0b%0256b", padded);
+
+      if (!length[3])
+        padded = {padded[255 : (128 + 8)], 8'b0};
+      $display("padded: 0b%0256b", padded);
+
+      if (!length[4])
+        padded = {padded[255 : (128 + 16)], 16'b0};
+      $display("padded: 0b%0256b", padded);
+
+      if (!length[5])
+        padded = {padded[255 : (128 + 32)], 32'b0};
+      $display("padded: 0b%0256b", padded);
+
+      if (!length[6])
+        padded = {padded[255 : (128 + 64)], 64'b0};
+      $display("padded: 0b%0256b", padded);
+
+      block_out = padded[255 : 128];
     end
   endtask // pad_block
 
@@ -118,9 +149,11 @@ module cmac_padding();
       reg [127 : 0] block_in;
       reg [127 : 0] block_out;
 
-      block_in = 128'h5555555_55555555_55555555_555555555;
+      block_in = 128'hdeadbeef_01020304_0a0b0c0d_55555555;
 
-      $display("Testing padding.");
+      $display("Testing cmac padding");
+      $display("--------------------");
+      $display("Block before padding:        0b%0128b", block_in);
       for (length = 0 ; length < 128 ; length = length + 1)
         begin
           pad_block(length, block_in, block_out);
