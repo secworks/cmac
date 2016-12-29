@@ -46,96 +46,54 @@ module cmac_padding();
   //----------------------------------------------------------------
   // pad_block()
   //
-  // pad a given block in with the given amount of data to generate
-  // block ut.
+  // pad a given block in with the given amount of data by
+  // zeroisingt non-data bits and then adding a one to the first
+  // bit after data.
   //----------------------------------------------------------------
   task pad_block(input [6 : 0] length, input [127 : 0] block_in,
                  output [127 : 0] block_out);
     begin : pad
-      reg [255 : 0] padded;
-      padded = {block_in, 1'b1, 127'b0};
-      $display("padded: 0b%0256b", padded);
+      reg [127 : 0] mask;
+      reg [127 : 0] masked_data;
+      reg [127 : 0] padded_data;
 
-      if (!length[0])
-        padded = {padded[255 : (128 + 1)], 1'b0};
-      $display("padded: 0b%0256b", padded);
-
-      if (!length[1])
-        padded = {padded[255 : (128 + 2)], 2'b0};
-      $display("padded: 0b%0256b", padded);
-
-      if (!length[2])
-        padded = {padded[255 : (128 + 4)], 4'b0};
-      $display("padded: 0b%0256b", padded);
-
-      if (!length[3])
-        padded = {padded[255 : (128 + 8)], 8'b0};
-      $display("padded: 0b%0256b", padded);
-
-      if (!length[4])
-        padded = {padded[255 : (128 + 16)], 16'b0};
-      $display("padded: 0b%0256b", padded);
-
-      if (!length[5])
-        padded = {padded[255 : (128 + 32)], 32'b0};
-      $display("padded: 0b%0256b", padded);
-
-      if (!length[6])
-        padded = {padded[255 : (128 + 64)], 64'b0};
-      $display("padded: 0b%0256b", padded);
-
-      block_out = padded[255 : 128];
-    end
-  endtask // pad_block
-
-
-  //----------------------------------------------------------------
-  // pad_mask()
-  //
-  // Generate pad mask used by pad_block
-  //----------------------------------------------------------------
-  task pad_mask(input [6 : 0] length, output [126 : 0] mask);
-    begin : gen_mask
-      reg [002 : 0] b1;
-      reg [006 : 0] b2;
-      reg [014 : 0] b3;
-      reg [030 : 0] b4;
-      reg [062 : 0] b5;
-      reg [126 : 0] b6;
+      // Generate bitmask used to add zeros to part of block not being data.
+      mask = 127'b0;
+      if (length[0])
+        mask = {1'b1, mask[127 :  1]};
 
       if (length[1])
-        b1 = {length[0], {2{1'b1}}};
-      else
-        b1 = {{2{1'b0}}, length[0]};
+        mask = {2'h3, mask[127 :  2]};
 
       if (length[2])
-        b2 = {b1, {4{1'b1}}};
-      else
-        b2 = {{4{1'b0}}, b1};
+        mask = {4'hf, mask[127 :  4]};
 
       if (length[3])
-        b3 = {b2, {8{1'b1}}};
-      else
-        b3 = {{8{1'b0}}, b2};
+        mask = {8'hff, mask[127 :  8]};
 
       if (length[4])
-        b4 = {b3, {16{1'b1}}};
-      else
-        b4 = {{16{1'b0}}, b3};
+        mask = {16'hffff, mask[127 :  16]};
 
       if (length[5])
-        b5 = {b4, {32{1'b1}}};
-      else
-        b5 = {{32{1'b0}}, b4};
+        mask = {32'hffffffff, mask[127 :  32]};
 
       if (length[6])
-        b6 = {b5, {64{1'b1}}};
-      else
-        b6 = {{64{1'b0}}, b5};
+        mask = {64'hffffffff_ffffffff, mask[127 :  64]};
 
-      mask = b6;
+      masked_data = block_in & mask;
+      padded_data = masked_data;
+      padded_data[(127 - length)] = 1'b1;
+      block_out = padded_data;
+
+
+      $display("Length: %03d", length);
+      $display("input_data:     0b%0128b", block_in);
+      $display("Generated mask: 0b%0128b", mask);
+      $display("Masked data:    0b%0128b", masked_data);
+      $display("Padded data:    0b%0128b", padded_data);
+      $display("");
     end
-  endtask // pad_mask
+  endtask // pad_block
 
 
   //----------------------------------------------------------------
@@ -153,11 +111,11 @@ module cmac_padding();
 
       $display("Testing cmac padding");
       $display("--------------------");
-      $display("Block before padding:        0b%0128b", block_in);
+      $display("Block before padding: 0b%0128b", block_in);
       for (length = 0 ; length < 128 ; length = length + 1)
         begin
           pad_block(length, block_in, block_out);
-          $display("padded block for length %03d: 0b%0128b", length, block_out);
+//          $display("padded block for length %03d: 0b%0128b", length, block_out);
         end
     end // test_padding
 
