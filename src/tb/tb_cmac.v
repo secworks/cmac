@@ -486,9 +486,11 @@ module tb_cmac();
   // tc2_gen_subkeys
   //
   // Check that subkeys k1 and k2 are correctly generated.
+  // The keys and test vectors are from NIST SP 800-38B, D.1.
   //----------------------------------------------------------------
   task tc2_gen_subkeys;
     begin
+      init_key(256'h00000000_00000000_00000000_00000000_2b7e1516_28aed2a6_abf71588_09cf4f3c, 1'b0);
     end
   endtask // cmac_test
 
