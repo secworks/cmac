@@ -339,7 +339,7 @@ module cmac(
       reg [126 : 0] b6;
 
 
-      // Subkey k1 and k2 generation.
+      // Generation of subkey k1 and k2.
       if (!core_result[127])
         k1_new = {core_result[126 : 0], core_result[127]};
       else
@@ -381,13 +381,14 @@ module cmac(
       padded_block[(127 - final_size_reg[6 : 0])] = 1'b1;
 
 
-      // Tweak of final block. based on if the final block is full or not.
+      // Tweak of final block. Based on if the final block is full or not.
       if (final_size_reg == AES_BLOCK_SIZE)
         tweaked_block = k1_reg ^ {block_reg[0], block_reg[1], block_reg[2], block_reg[3]};
       else
         tweaked_block = k2_reg ^ padded_block;
 
 
+      // Input mux for the AES core.
       case (bmux_ctrl)
         BMUX_ZERO:
           core_block = 128'h0;
