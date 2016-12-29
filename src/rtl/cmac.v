@@ -327,6 +327,8 @@ module cmac(
   always @*
     begin : cmac_datapath
       reg [127 : 0] tweak;
+      reg [127 : 0] mask;
+      reg [127 : 0] masked_block;
       reg [127 : 0] padded_block;
       reg [127 : 0] tweaked_block;
       reg [002 : 0] b1;
@@ -349,40 +351,34 @@ module cmac(
         k2_new = {k1_new[126 : 0], k1_new[127]} ^ R128;
 
 
-      // Padding of final block. We create an AND mask that preserves
-      // the data in the block and zeroise all other bits. We add
-      // a one to bit 127.
+      // Padding of final block. We create a mask that preserves
+      // the data in the block and zeroises all other bits.
+      // We add a one to bit at the first non-data position.
+      mask = 127'b0;
+      if (final_size_reg[0])
+        mask = {1'b1, mask[127 :  1]};
+
       if (final_size_reg[1])
-        b1 = {final_size_reg[0], {2{1'b1}}};
-      else
-        b1 = {{2{1'b0}}, final_size_reg[0]};
+        mask = {2'h3, mask[127 :  2]};
 
       if (final_size_reg[2])
-        b2 = {b1, {4{1'b1}}};
-      else
-        b2 = {{4{1'b0}}, b1};
+        mask = {4'hf, mask[127 :  4]};
 
       if (final_size_reg[3])
-        b3 = {b2, {8{1'b1}}};
-      else
-        b3 = {{8{1'b0}}, b2};
+        mask = {8'hff, mask[127 :  8]};
 
       if (final_size_reg[4])
-        b4 = {b3, {16{1'b1}}};
-      else
-        b4 = {{16{1'b0}}, b3};
+        mask = {16'hffff, mask[127 :  16]};
 
       if (final_size_reg[5])
-        b5 = {b4, {32{1'b1}}};
-      else
-        b5 = {{32{1'b0}}, b4};
+        mask = {32'hffffffff, mask[127 :  32]};
 
       if (final_size_reg[6])
-        b6 = {b5, {64{1'b1}}};
-      else
-        b6 = {{64{1'b0}}, b5};
+        mask = {64'hffffffff_ffffffff, mask[127 :  64]};
 
-      padded_block = {1'b1, b6 & {block_reg[0], block_reg[1], block_reg[2], block_reg[3]}};
+      masked_block = {block_reg[0], block_reg[1], block_reg[2], block_reg[3]} & mask;
+      padded_block = masked_block;
+      padded_block[(127 - final_size_reg[6 : 0])] = 1'b1;
 
 
       // Tweak of final block. based on if the final block is full or not.
@@ -405,7 +401,7 @@ module cmac(
                                       block_reg[2], block_reg[3]};
 
         BMUX_XOR_TWEAK:
-          core_block  = result_reg ^ tweak;
+          core_block  = result_reg ^ tweaked_block;
       endcase // case (bmux_ctrl)
     end
 
