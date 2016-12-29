@@ -15,7 +15,7 @@ and 256 bit keys. The ICV generated is 128 bit.
 
 ## Usage ##
 Note that the core expects information about number of bits in the final
-message block [1..128]. The core performs padding and tweak based in
+message block [1..128]. The core performs padding and tweak based on
 this information.
 
 
