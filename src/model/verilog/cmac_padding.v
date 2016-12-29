@@ -115,7 +115,6 @@ module cmac_padding();
       for (length = 0 ; length < 128 ; length = length + 1)
         begin
           pad_block(length, block_in, block_out);
-//          $display("padded block for length %03d: 0b%0128b", length, block_out);
         end
     end // test_padding
 
