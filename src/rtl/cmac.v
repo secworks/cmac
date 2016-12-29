@@ -112,7 +112,6 @@ module cmac(
   reg           config_we;
 
   reg [7 : 0]   final_size_reg;
-  reg [7 : 0]   final_size_new;
   reg           final_size_we;
 
   reg [31 : 0]  block_reg [0 : 3];
@@ -326,17 +325,10 @@ module cmac(
   //----------------------------------------------------------------
   always @*
     begin : cmac_datapath
-      reg [127 : 0] tweak;
       reg [127 : 0] mask;
       reg [127 : 0] masked_block;
       reg [127 : 0] padded_block;
       reg [127 : 0] tweaked_block;
-      reg [002 : 0] b1;
-      reg [006 : 0] b2;
-      reg [014 : 0] b3;
-      reg [030 : 0] b4;
-      reg [062 : 0] b5;
-      reg [126 : 0] b6;
 
 
       // Generation of subkey k1 and k2.
@@ -431,6 +423,18 @@ module cmac(
                 cmac_ctrl_new = CTRL_GEN_SUBKEYS;
                 cmac_ctrl_we  = 1;
               end
+
+            if (next)
+              begin
+                cmac_ctrl_new = CTRL_NEXT_BLOCK;
+                cmac_ctrl_we  = 1;
+              end
+
+            if (finalize)
+              begin
+                cmac_ctrl_new = CTRL_FINAL_BLOCK;
+                cmac_ctrl_we  = 1;
+              end
           end
 
         CTRL_GEN_SUBKEYS:
@@ -445,22 +449,32 @@ module cmac(
 
         CTRL_FIRST_BLOCK:
           begin
+            cmac_ctrl_new = CTRL_IDLE;
+            cmac_ctrl_we  = 1;
           end
 
         CTRL_NEXT_BLOCK:
           begin
+            cmac_ctrl_new = CTRL_IDLE;
+            cmac_ctrl_we  = 1;
           end
 
         CTRL_FINAL_BLOCK:
           begin
+            cmac_ctrl_new = CTRL_IDLE;
+            cmac_ctrl_we  = 1;
           end
 
         CTRL_TWEAK:
           begin
+            cmac_ctrl_new = CTRL_IDLE;
+            cmac_ctrl_we  = 1;
           end
 
         CTRL_DONE:
           begin
+            cmac_ctrl_new = CTRL_IDLE;
+            cmac_ctrl_we  = 1;
           end
 
         default:
