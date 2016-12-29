@@ -97,6 +97,7 @@ module tb_cmac();
   reg [31 : 0]  cycle_ctr;
   reg [31 : 0]  error_ctr;
   reg [31 : 0]  tc_ctr;
+  reg           tc_correct;
 
   reg [31 : 0]  read_data;
   reg [127 : 0] result_data;
@@ -190,7 +191,6 @@ module tb_cmac();
   task reset_dut;
     begin
       $display("*** Resetting dut.");
-      $display("");
       tb_reset_n = 0;
       #(2 * CLK_PERIOD);
       tb_reset_n = 1;
@@ -205,13 +205,14 @@ module tb_cmac();
   //----------------------------------------------------------------
   task display_test_results;
     begin
+      $display("");
       if (error_ctr == 0)
         begin
-          $display("*** All %02d test cases completed successfully", tc_ctr);
+          $display("%02d test completed. All test cases completed successfully.", tc_ctr);
         end
       else
         begin
-          $display("*** %02d tests completed - %02d test cases did not complete successfully.",
+          $display("%02d tests completed - %02d test cases did not complete successfully.",
                    tc_ctr, error_ctr);
         end
     end
@@ -239,6 +240,22 @@ module tb_cmac();
       tb_write_data = 32'h0;
     end
   endtask // init_sim
+
+
+  //----------------------------------------------------------------
+  // inc_tc_ctr
+  //----------------------------------------------------------------
+  task inc_tc_ctr;
+    tc_ctr = tc_ctr + 1;
+  endtask // inc_tc_ctr
+
+
+  //----------------------------------------------------------------
+  // inc_error_ctr
+  //----------------------------------------------------------------
+  task inc_error_ctr;
+    error_ctr = error_ctr + 1;
+  endtask // inc_error_ctr
 
 
   //----------------------------------------------------------------
@@ -370,7 +387,97 @@ module tb_cmac();
   // Check that registers are correctly cleared by reset.
   //----------------------------------------------------------------
   task tc1_check_reset;
-    begin
+    begin : tc1
+      integer i;
+
+      inc_tc_ctr();
+
+      tc_correct = 1;
+      $display("TC1: Check that reset clears all registers in cmac.");
+      reset_dut();
+
+      for (i = 0; i < 4; i = i + 1)
+        begin
+          if (dut.block_reg[i] != 32'h0)
+          begin
+            $display("TC1: ERROR - block_reg[%d] not properly reset.", i);
+            tc_correct = 0;
+            inc_error_ctr();
+          end
+        end
+
+      for (i = 0; i < 8; i = i + 1)
+        begin
+          if (dut.key_reg[i] != 32'h0)
+          begin
+            $display("TC1: ERROR - key_reg[%d] not properly reset.", i);
+            tc_correct = 0;
+            inc_error_ctr();
+          end
+        end
+
+      if (dut.k1_reg != 128'h0)
+        begin
+          $display("TC1: ERROR - k1_reg not properly reset.");
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
+      if (dut.k2_reg != 128'h0)
+        begin
+          $display("TC1: ERROR - k2_reg not properly reset.");
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
+      if (dut.result_reg != 128'h0)
+        begin
+          $display("TC1: ERROR - result_reg not properly reset.");
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
+      if (dut.encdec_reg != 0)
+        begin
+          $display("TC1: ERROR - encdec_reg not properly reset.");
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
+      if (dut.keylen_reg != 0)
+        begin
+          $display("TC1: ERROR - keylen_reg not properly reset.");
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
+      if (dut.final_size_reg != 8'h0)
+        begin
+          $display("TC1: ERROR - final_size_reg not properly reset.");
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
+      if (dut.valid_reg != 0)
+        begin
+          $display("TC1: ERROR - valid_reg not properly reset.");
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
+      if (dut.ready_reg != 0)
+        begin
+          $display("TC1: ERROR - ready_reg not properly reset.");
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
+      if (tc_correct)
+        $display("TC1: SUCCESS - All registers correctly reset.");
+      else
+        $display("TC1: NO SUCCESS - Not all registers correctly reset.");
+
+      $display("");
     end
   endtask // cmac_test
 
@@ -404,9 +511,8 @@ module tb_cmac();
   //----------------------------------------------------------------
   initial
     begin : main
-      $display("   -= Testbench for CMAC started =-");
-      $display("    ===============================");
-      $display("");
+      $display("*** Testbench for CMAC started ***");
+      $display("*** ========================== ***");
 
       init_sim();
 
@@ -416,7 +522,6 @@ module tb_cmac();
 
       display_test_results();
 
-      $display("");
       $display("*** CMAC simulation done. ***");
       $finish;
     end // main
