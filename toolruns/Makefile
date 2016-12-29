@@ -48,7 +48,7 @@ CORE_SRC=$(AES_CORE_SW_DIR)/aes_core.v $(KEYMEM_SRC) $(SBOX_SRC) $(INV_SBOX_SRC)
 TOP_SRC=../src/rtl/cmac.v $(CORE_SRC)
 TB_TOP_SRC =../src/tb/tb_cmac.v
 
-PADDING_SRC=../src/rtl/cmac_padding.v
+PADDING_SRC=../src/model/verilog/cmac_padding.v
 
 CC=iverilog
 LINT=verilator

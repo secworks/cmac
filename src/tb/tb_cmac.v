@@ -189,11 +189,11 @@ module tb_cmac();
   //----------------------------------------------------------------
   task reset_dut;
     begin
-      $display("*** Toggle reset.");
+      $display("*** Resetting dut.");
+      $display("");
       tb_reset_n = 0;
       #(2 * CLK_PERIOD);
       tb_reset_n = 1;
-      $display("");
     end
   endtask // reset_dut
 
@@ -365,151 +365,36 @@ module tb_cmac();
 
 
   //----------------------------------------------------------------
-  // ecb_mode_single_block_test()
+  // tc1_reset_registers
   //
-  // Perform ECB mode encryption or decryption single block test.
+  // Check that registers are correctly cleared by reset.
   //----------------------------------------------------------------
-//  task ecb_mode_single_block_test(input [7 : 0]   tc_number,
-//                                  input           encdec,
-//                                  input [255 : 0] key,
-//                                  input           key_length,
-//                                  input [127 : 0] block,
-//                                  input [127 : 0] expected);
-//    begin
-//      $display("*** TC %0d ECB mode test started.", tc_number);
-//      tc_ctr = tc_ctr + 1;
-//
-//      init_key(key, key_length);
-//      write_block(block);
-//      dump_dut_state();
-//
-//      write_word(ADDR_CONFIG, (8'h00 + (key_length << 1)+ encdec));
-//      write_word(ADDR_CTRL, 8'h02);
-//
-//      #(100 * CLK_PERIOD);
-//
-//      read_result();
-//
-//      if (result_data == expected)
-//        begin
-//          $display("*** TC %0d successful.", tc_number);
-//          $display("");
-//        end
-//      else
-//        begin
-//          $display("*** ERROR: TC %0d NOT successful.", tc_number);
-//          $display("Expected: 0x%032x", expected);
-//          $display("Got:      0x%032x", result_data);
-//          $display("");
-//
-//          error_ctr = error_ctr + 1;
-//        end
-//    end
-//  endtask // ecb_mode_single_block_test
-
-
-  //----------------------------------------------------------------
-  // cmac_test()
-  //
-  // Main test task will perform complete NIST test of CMAC-AES.
-  //----------------------------------------------------------------
-  task cmac_test;
-    begin : cmac_test
-    reg [255 : 0] nist_aes128_key;
-    reg [255 : 0] nist_aes256_key;
-//
-//    reg [127 : 0] nist_plaintext0;
-//    reg [127 : 0] nist_plaintext1;
-//    reg [127 : 0] nist_plaintext2;
-//    reg [127 : 0] nist_plaintext3;
-//
-//    reg [127 : 0] nist_ecb_128_enc_expected0;
-//    reg [127 : 0] nist_ecb_128_enc_expected1;
-//    reg [127 : 0] nist_ecb_128_enc_expected2;
-//    reg [127 : 0] nist_ecb_128_enc_expected3;
-//
-//    reg [127 : 0] nist_ecb_256_enc_expected0;
-//    reg [127 : 0] nist_ecb_256_enc_expected1;
-//    reg [127 : 0] nist_ecb_256_enc_expected2;
-//    reg [127 : 0] nist_ecb_256_enc_expected3;
-//
-//    begin
-//      nist_aes128_key = 256'h2b7e151628aed2a6abf7158809cf4f3c00000000000000000000000000000000;
-//      nist_aes256_key = 256'h603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4;
-//
-//      nist_plaintext0 = 128'h6bc1bee22e409f96e93d7e117393172a;
-//      nist_plaintext1 = 128'hae2d8a571e03ac9c9eb76fac45af8e51;
-//      nist_plaintext2 = 128'h30c81c46a35ce411e5fbc1191a0a52ef;
-//      nist_plaintext3 = 128'hf69f2445df4f9b17ad2b417be66c3710;
-//
-//      nist_ecb_128_enc_expected0 = 128'h3ad77bb40d7a3660a89ecaf32466ef97;
-//      nist_ecb_128_enc_expected1 = 128'hf5d3d58503b9699de785895a96fdbaaf;
-//      nist_ecb_128_enc_expected2 = 128'h43b1cd7f598ece23881b00e3ed030688;
-//      nist_ecb_128_enc_expected3 = 128'h7b0c785e27e8ad3f8223207104725dd4;
-//
-//      nist_ecb_256_enc_expected0 = 128'hf3eed1bdb5d2a03c064b5a7e3db181f8;
-//      nist_ecb_256_enc_expected1 = 128'h591ccb10d410ed26dc5ba74a31362870;
-//      nist_ecb_256_enc_expected2 = 128'hb6ed21b99ca6f4f9f153e7b1beafed1d;
-//      nist_ecb_256_enc_expected3 = 128'h23304b7a39f9f3ff067d8d8f9e24ecc7;
-//
-//
-//      $display("ECB 128 bit key tests");
-//      $display("---------------------");
-//      ecb_mode_single_block_test(8'h01, AES_ENCIPHER, nist_aes128_key, AES_128_BIT_KEY,
-//                                 nist_plaintext0, nist_ecb_128_enc_expected0);
-//
-//      ecb_mode_single_block_test(8'h02, AES_ENCIPHER, nist_aes128_key, AES_128_BIT_KEY,
-//                                nist_plaintext1, nist_ecb_128_enc_expected1);
-//
-//      ecb_mode_single_block_test(8'h03, AES_ENCIPHER, nist_aes128_key, AES_128_BIT_KEY,
-//                                 nist_plaintext2, nist_ecb_128_enc_expected2);
-//
-//      ecb_mode_single_block_test(8'h04, AES_ENCIPHER, nist_aes128_key, AES_128_BIT_KEY,
-//                                 nist_plaintext3, nist_ecb_128_enc_expected3);
-//
-//
-//      ecb_mode_single_block_test(8'h05, AES_DECIPHER, nist_aes128_key, AES_128_BIT_KEY,
-//                                 nist_ecb_128_enc_expected0, nist_plaintext0);
-//
-//      ecb_mode_single_block_test(8'h06, AES_DECIPHER, nist_aes128_key, AES_128_BIT_KEY,
-//                                 nist_ecb_128_enc_expected1, nist_plaintext1);
-//
-//      ecb_mode_single_block_test(8'h07, AES_DECIPHER, nist_aes128_key, AES_128_BIT_KEY,
-//                                 nist_ecb_128_enc_expected2, nist_plaintext2);
-//
-//      ecb_mode_single_block_test(8'h08, AES_DECIPHER, nist_aes128_key, AES_128_BIT_KEY,
-//                                 nist_ecb_128_enc_expected3, nist_plaintext3);
-//
-//
-//      $display("");
-//      $display("ECB 256 bit key tests");
-//      $display("---------------------");
-//      ecb_mode_single_block_test(8'h10, AES_ENCIPHER, nist_aes256_key, AES_256_BIT_KEY,
-//                                 nist_plaintext0, nist_ecb_256_enc_expected0);
-//
-//      ecb_mode_single_block_test(8'h11, AES_ENCIPHER, nist_aes256_key, AES_256_BIT_KEY,
-//                                 nist_plaintext1, nist_ecb_256_enc_expected1);
-//
-//      ecb_mode_single_block_test(8'h12, AES_ENCIPHER, nist_aes256_key, AES_256_BIT_KEY,
-//                                 nist_plaintext2, nist_ecb_256_enc_expected2);
-//
-//      ecb_mode_single_block_test(8'h13, AES_ENCIPHER, nist_aes256_key, AES_256_BIT_KEY,
-//                                 nist_plaintext3, nist_ecb_256_enc_expected3);
-//
-//
-//      ecb_mode_single_block_test(8'h14, AES_DECIPHER, nist_aes256_key, AES_256_BIT_KEY,
-//                                 nist_ecb_256_enc_expected0, nist_plaintext0);
-//
-//      ecb_mode_single_block_test(8'h15, AES_DECIPHER, nist_aes256_key, AES_256_BIT_KEY,
-//                                 nist_ecb_256_enc_expected1, nist_plaintext1);
-//
-//      ecb_mode_single_block_test(8'h16, AES_DECIPHER, nist_aes256_key, AES_256_BIT_KEY,
-//                                 nist_ecb_256_enc_expected2, nist_plaintext2);
-//
-//      ecb_mode_single_block_test(8'h17, AES_DECIPHER, nist_aes256_key, AES_256_BIT_KEY,
-//                                 nist_ecb_256_enc_expected3, nist_plaintext3);
+  task tc1_check_reset;
+    begin
     end
-  endtask // aes_test
+  endtask // cmac_test
+
+
+  //----------------------------------------------------------------
+  // tc2_gen_subkeys
+  //
+  // Check that subkeys k1 and k2 are correctly generated.
+  //----------------------------------------------------------------
+  task tc2_gen_subkeys;
+    begin
+    end
+  endtask // cmac_test
+
+
+  //----------------------------------------------------------------
+  // tc3_empty_message
+  //
+  // Check that subkeys k1 and k2 are correctly generated.
+  //----------------------------------------------------------------
+  task tc3_empty_message;
+    begin
+    end
+  endtask // cmac_test
 
 
   //----------------------------------------------------------------
@@ -524,11 +409,10 @@ module tb_cmac();
       $display("");
 
       init_sim();
-      dump_dut_state();
-      reset_dut();
-      dump_dut_state();
 
-      cmac_test();
+      tc1_check_reset();
+      tc2_gen_subkeys();
+      tc3_empty_message();
 
       display_test_results();
 
