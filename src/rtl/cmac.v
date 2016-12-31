@@ -122,7 +122,11 @@ module cmac(
 
   reg [127 : 0] result_reg;
   reg           valid_reg;
+  reg           valid_new;
+  reg           valid_we;
   reg           ready_reg;
+  reg           ready_new;
+  reg           ready_we;
 
   reg [127 : 0] k1_reg;
   reg [127 : 0] k1_new;
@@ -220,9 +224,13 @@ module cmac(
         end
       else
         begin
-          ready_reg  <= core_ready;
-          valid_reg  <= core_valid;
           result_reg <= core_result;
+
+          if (ready_we)
+            ready_reg <= ready_new;
+
+          if (valid_we)
+            valid_reg <= valid_new;
 
           if (k1_k2_we)
             begin
@@ -410,6 +418,10 @@ module cmac(
       core_next     = 0;
       bmux_ctrl     = BMUX_ZERO;
       k1_k2_we      = 0;
+      ready_new     = 0;
+      ready_we      = 0;
+      valid_new     = 0;
+      valid_we      = 0;
       cmac_ctrl_new = CTRL_IDLE;
       cmac_ctrl_we  = 0;
 
@@ -418,6 +430,10 @@ module cmac(
           begin
             if (init)
               begin
+                ready_new     = 0;
+                ready_we      = 1;
+                valid_new     = 0;
+                valid_we      = 1;
                 core_init     = 1;
                 bmux_ctrl     = BMUX_ZERO;
                 cmac_ctrl_new = CTRL_GEN_SUBKEYS;
@@ -426,12 +442,16 @@ module cmac(
 
             if (next)
               begin
+                ready_new     = 0;
+                ready_we      = 1;
                 cmac_ctrl_new = CTRL_NEXT_BLOCK;
                 cmac_ctrl_we  = 1;
               end
 
             if (finalize)
               begin
+                ready_new     = 0;
+                ready_we      = 1;
                 cmac_ctrl_new = CTRL_FINAL_BLOCK;
                 cmac_ctrl_we  = 1;
               end
