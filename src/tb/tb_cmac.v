@@ -56,10 +56,10 @@ module tb_cmac();
   localparam ADDR_CTRL        = 8'h08;
   localparam CTRL_INIT_BIT    = 0;
   localparam CTRL_NEXT_BIT    = 1;
-  localparam CTRL_ENCDEC_BIT  = 2;
-  localparam CTRL_KEYLEN_BIT  = 3;
+  localparam CTRL_FINAL_BIT   = 2;
 
   localparam ADDR_CONFIG      = 8'h09;
+  localparam CTRL_KEYLEN_BIT  = 0;
 
   localparam ADDR_STATUS      = 8'h0a;
   localparam STATUS_READY_BIT = 0;
@@ -172,7 +172,7 @@ module tb_cmac();
       $display("State of DUT");
       $display("------------");
       $display("ctrl_reg:   init   = 0x%01x, next   = 0x%01x", dut.init, dut.next);
-      $display("config_reg: encdec = 0x%01x, length = 0x%01x ", dut.encdec_reg, dut.keylen_reg);
+      $display("config_reg: length = 0x%01x ", dut.keylen_reg);
       $display("");
 
       $display("block: 0x%08x, 0x%08x, 0x%08x, 0x%08x",
@@ -433,13 +433,6 @@ module tb_cmac();
       if (dut.result_reg != 128'h0)
         begin
           $display("TC1: ERROR - result_reg not properly reset.");
-          tc_correct = 0;
-          inc_error_ctr();
-        end
-
-      if (dut.encdec_reg != 0)
-        begin
-          $display("TC1: ERROR - encdec_reg not properly reset.");
           tc_correct = 0;
           inc_error_ctr();
         end

@@ -60,8 +60,7 @@ module cmac(
   localparam CTRL_FINAL_BIT   = 2;
 
   localparam ADDR_CONFIG      = 8'h09;
-  localparam CTRL_ENCDEC_BIT  = 0;
-  localparam CTRL_KEYLEN_BIT  = 1;
+  localparam CTRL_KEYLEN_BIT  = 0;
 
   localparam ADDR_STATUS      = 8'h0a;
   localparam STATUS_READY_BIT = 0;
@@ -107,7 +106,6 @@ module cmac(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg           encdec_reg;
   reg           keylen_reg;
   reg           config_we;
 
@@ -169,7 +167,7 @@ module cmac(
   assign core_key = {key_reg[0], key_reg[1], key_reg[2], key_reg[3],
                      key_reg[4], key_reg[5], key_reg[6], key_reg[7]};
 
-  assign core_encdec = encdec_reg;
+  assign core_encdec = 1'b1;
   assign core_keylen = keylen_reg;
 
 
@@ -214,7 +212,6 @@ module cmac(
 
           k1_reg         <= 128'h0;
           k2_reg         <= 128'h0;
-          encdec_reg     <= 0;
           keylen_reg     <= 0;
           final_size_reg <= 8'h0;
           result_reg     <= 128'h0;
@@ -240,7 +237,6 @@ module cmac(
 
           if (config_we)
             begin
-              encdec_reg <= write_data[CTRL_ENCDEC_BIT];
               keylen_reg <= write_data[CTRL_KEYLEN_BIT];
             end
 
@@ -308,7 +304,7 @@ module cmac(
                 ADDR_NAME0:      tmp_read_data = CORE_NAME0;
                 ADDR_NAME1:      tmp_read_data = CORE_NAME1;
                 ADDR_VERSION:    tmp_read_data = CORE_VERSION;
-                ADDR_CTRL:       tmp_read_data = {30'h0, keylen_reg, encdec_reg};
+                ADDR_CTRL:       tmp_read_data = {31'h0, keylen_reg};
                 ADDR_STATUS:     tmp_read_data = {30'h0, valid_reg, ready_reg};
                 ADDR_FINAL_SIZE: tmp_read_data = {24'h0, final_size_reg};
                 ADDR_RESULT0:    tmp_read_data = result_reg[127 : 96];
