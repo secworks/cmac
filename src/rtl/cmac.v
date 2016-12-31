@@ -92,8 +92,8 @@ module cmac(
   localparam BMUX_XOR_TWEAK   = 3;
 
   localparam CTRL_IDLE        = 0;
-  localparam CTRL_GEN_SUBKEYS = 1;
-  localparam CTRL_KEYS_DONE   = 2;
+  localparam CTRL_INIT_CORE   = 1;
+  localparam CTRL_GEN_SUBKEYS = 2;
   localparam CTRL_FIRST_BLOCK = 3;
   localparam CTRL_NEXT_BLOCK  = 4;
   localparam CTRL_FINAL_BLOCK = 5;
@@ -435,8 +435,7 @@ module cmac(
                 valid_new     = 0;
                 valid_we      = 1;
                 core_init     = 1;
-                bmux_ctrl     = BMUX_ZERO;
-                cmac_ctrl_new = CTRL_GEN_SUBKEYS;
+                cmac_ctrl_new = CTRL_INIT_CORE;
                 cmac_ctrl_we  = 1;
               end
 
@@ -457,10 +456,23 @@ module cmac(
               end
           end
 
+        CTRL_INIT_CORE:
+          begin
+            if (core_ready)
+              begin
+                core_next     = 1;
+                bmux_ctrl     = BMUX_ZERO;
+                cmac_ctrl_new = CTRL_GEN_SUBKEYS;
+                cmac_ctrl_we  = 1;
+              end
+          end
+
         CTRL_GEN_SUBKEYS:
           begin
             if (core_ready)
               begin
+                ready_new     = 1;
+                ready_we      = 1;
                 k1_k2_we      = 1;
                 cmac_ctrl_new = CTRL_IDLE;
                 cmac_ctrl_we  = 1;
