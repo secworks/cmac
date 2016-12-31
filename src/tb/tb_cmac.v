@@ -171,14 +171,18 @@ module tb_cmac();
       $display("cycle: 0x%016x", cycle_ctr);
       $display("State of DUT");
       $display("------------");
-      $display("ctrl_reg:   init   = 0x%01x, next   = 0x%01x", dut.init, dut.next);
-      $display("config_reg: length = 0x%01x ", dut.keylen_reg);
-      $display("");
-
+      $display("ctrl:   init   = 0x%01x, next = 0x%01x", dut.init, dut.next);
+      $display("config: length = 0x%01x ", dut.keylen_reg);
+      $display("k1 = 0x%016x, k2 = 0x%016x", dut.k1_reg, dut.k2_reg);
+      $display("ready = 0x%01x, valid = 0x%01x, ctrl_state = 0x%02x",
+               dut.ready_reg, dut.valid_reg, dut.cmac_ctrl_reg);
       $display("block: 0x%08x, 0x%08x, 0x%08x, 0x%08x",
                dut.block_reg[0], dut.block_reg[1], dut.block_reg[2], dut.block_reg[3]);
       $display("");
-
+      $display("core ready: 0x%01x, core valid: 0x%01x",
+               dut.core_ready, dut.core_valid);
+      $display("core result: 0x%064x ", dut.core_result);
+      $display("");
     end
   endtask // dump_dut_state
 
@@ -502,7 +506,7 @@ module tb_cmac();
       tc_correct = 1;
       $display("TC2: Check that k1 and k2 subkeys are correctly generated.");
 
-      init_key(256'h00000000_00000000_00000000_00000000_2b7e1516_28aed2a6_abf71588_09cf4f3c, 1'b0);
+      init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000, 1'b0);
       wait_ready();
     end
   endtask // cmac_test
