@@ -216,7 +216,7 @@ module cmac(
           final_size_reg <= 8'h0;
           result_reg     <= 128'h0;
           valid_reg      <= 0;
-          ready_reg      <= 0;
+          ready_reg      <= 1;
           cmac_ctrl_reg  <= CTRL_IDLE;
         end
       else
