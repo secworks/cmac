@@ -43,7 +43,7 @@ module tb_cmac();
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam DEBUG     = 0;
+  localparam DEBUG = 1;
 
   localparam CLK_HALF_PERIOD = 1;
   localparam CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
@@ -324,6 +324,20 @@ module tb_cmac();
 
 
   //----------------------------------------------------------------
+  // wait_ready()
+  //
+  // Wait for the ready flag to be set in dut.
+  //----------------------------------------------------------------
+  task wait_ready;
+    begin : bajs
+      integer i;
+      for (i = 0 ; i < 100 ; i = i + 1)
+        $display("ready = 0x%01x", dut.ready_reg);
+    end
+  endtask // wait_ready
+
+
+  //----------------------------------------------------------------
   // read_result()
   //
   // Read the result block in the dut.
@@ -482,8 +496,14 @@ module tb_cmac();
   // The keys and test vectors are from NIST SP 800-38B, D.1.
   //----------------------------------------------------------------
   task tc2_gen_subkeys;
-    begin
+    begin : tc2
+      inc_tc_ctr();
+
+      tc_correct = 1;
+      $display("TC2: Check that k1 and k2 subkeys are correctly generated.");
+
       init_key(256'h00000000_00000000_00000000_00000000_2b7e1516_28aed2a6_abf71588_09cf4f3c, 1'b0);
+      wait_ready();
     end
   endtask // cmac_test
 
@@ -507,7 +527,6 @@ module tb_cmac();
   initial
     begin : main
       $display("*** Testbench for CMAC started ***");
-      $display("*** ========================== ***");
 
       init_sim();
 
