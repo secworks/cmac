@@ -43,7 +43,7 @@ module tb_cmac();
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam DEBUG = 1;
+  localparam DEBUG = 0;
 
   localparam CLK_HALF_PERIOD = 1;
   localparam CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
@@ -194,7 +194,7 @@ module tb_cmac();
   //----------------------------------------------------------------
   task reset_dut;
     begin
-      $display("*** Resetting dut.");
+      $display("TB: Resetting dut.");
       tb_reset_n = 0;
       #(2 * CLK_PERIOD);
       tb_reset_n = 1;
@@ -333,10 +333,10 @@ module tb_cmac();
   // Wait for the ready flag to be set in dut.
   //----------------------------------------------------------------
   task wait_ready;
-    begin : bajs
-      integer i;
-      for (i = 0 ; i < 100 ; i = i + 1)
-        $display("ready = 0x%01x", dut.ready_reg);
+    begin : wready
+      read_word(ADDR_STATUS);
+      while (read_data == 0)
+        read_word(ADDR_STATUS);
     end
   endtask // wait_ready
 
@@ -393,8 +393,6 @@ module tb_cmac();
         end
 
       write_word(ADDR_CTRL, 8'h01);
-
-      #(100 * CLK_PERIOD);
     end
   endtask // init_key
 
@@ -476,7 +474,7 @@ module tb_cmac();
           inc_error_ctr();
         end
 
-      if (dut.ready_reg != 0)
+      if (dut.ready_reg != 1)
         begin
           $display("TC1: ERROR - ready_reg not properly reset.");
           tc_correct = 0;
@@ -508,6 +506,28 @@ module tb_cmac();
 
       init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000, 1'b0);
       wait_ready();
+
+      if (DEBUG)
+        $display("TC2: k1 = 0x%032x, k2 = 0x%032x", dut.k1_reg, dut.k2_reg);
+
+      if (dut.k1_reg != 128'hfbeed618_35713366_7c85e08f_7236a8de)
+        begin
+          $display("TC2: ERROR - K1 incorrect. Expected 0xfbeed618_35713366_7c85e08f_7236a8de, got 0x%032x.", dut.k1_reg);
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
+      if (dut.k2_reg != 128'hf7ddac30_6ae266cc_f90bc11e_e46d513b)
+        begin
+          $display("TC2: ERROR - K2 incorrect. Expected 0x7ddac30_6ae266cc_f90bc11e_e46d513b, got 0x%032x.", dut.k2_reg);
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
+      if (tc_correct)
+        $display("TC2: SUCCESS - K1 and K2 subkeys correctly generated.");
+      else
+        $display("TC2: NO SUCCESS - Subkeys not correctly generated.");
     end
   endtask // cmac_test
 
