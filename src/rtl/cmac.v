@@ -325,7 +325,7 @@ module cmac(
   // cmac_datapath
   //
   // The cmac datapath. Basically a mux for the input data block
-  // to the AES core and som xor gates for the logic.
+  // to the AES core and some gates for the logic.
   //----------------------------------------------------------------
   always @*
     begin : cmac_datapath
@@ -336,15 +336,13 @@ module cmac(
 
 
       // Generation of subkey k1 and k2.
-      if (!core_result[127])
-        k1_new = {core_result[126 : 0], core_result[127]};
-      else
-        k1_new = {core_result[126 : 0], core_result[127]} ^ R128;
+      k1_new = {core_result[126 : 0], 1'b0};
+      if (core_result[127])
+        k1_new = k1_new ^ R128;
 
-      if (!k1_new[127])
-        k2_new = {k1_new[126 : 0], k1_new[127]};
-      else
-        k2_new = {k1_new[126 : 0], k1_new[127]} ^ R128;
+      k2_new = {k1_new[126 : 0], 1'b0};
+      if (k1_new[127])
+        k2_new = k2_new ^ R128;
 
 
       // Padding of final block. We create a mask that preserves

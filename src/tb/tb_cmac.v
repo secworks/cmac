@@ -508,7 +508,10 @@ module tb_cmac();
       wait_ready();
 
       if (DEBUG)
-        $display("TC2: k1 = 0x%032x, k2 = 0x%032x", dut.k1_reg, dut.k2_reg);
+        begin
+          $display("TC2: core_result[127] = 0x%01x, k1_new[127] = 0x%01x", dut.core_result[127], dut.k1_new[127]);
+          $display("TC2: k1 = 0x%032x, k2 = 0x%032x", dut.k1_reg, dut.k2_reg);
+        end
 
       if (dut.k1_reg != 128'hfbeed618_35713366_7c85e08f_7236a8de)
         begin
