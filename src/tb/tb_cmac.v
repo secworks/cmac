@@ -65,6 +65,8 @@ module tb_cmac();
   localparam STATUS_READY_BIT = 0;
   localparam STATUS_VALID_BIT = 1;
 
+  localparam ADDR_FINAL_SIZE  = 8'h0b;
+
   localparam ADDR_KEY0        = 8'h10;
   localparam ADDR_KEY1        = 8'h11;
   localparam ADDR_KEY2        = 8'h12;
@@ -504,12 +506,14 @@ module tb_cmac();
       tc_correct = 1;
       $display("TC2: Check that k1 and k2 subkeys are correctly generated.");
 
-      init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000, 1'b0);
+      init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
+               AES_128_BIT_KEY);
       wait_ready();
 
       if (DEBUG)
         begin
-          $display("TC2: core_result[127] = 0x%01x, k1_new[127] = 0x%01x", dut.core_result[127], dut.k1_new[127]);
+          $display("TC2: core_result[127] = 0x%01x, k1_new[127] = 0x%01x",
+                   dut.core_result[127], dut.k1_new[127]);
           $display("TC2: k1 = 0x%032x, k2 = 0x%032x", dut.k1_reg, dut.k2_reg);
         end
 
@@ -531,6 +535,8 @@ module tb_cmac();
         $display("TC2: SUCCESS - K1 and K2 subkeys correctly generated.");
       else
         $display("TC2: NO SUCCESS - Subkeys not correctly generated.");
+
+      $display("");
     end
   endtask // cmac_test
 
@@ -538,10 +544,24 @@ module tb_cmac();
   //----------------------------------------------------------------
   // tc3_empty_message
   //
-  // Check that subkeys k1 and k2 are correctly generated.
+  // Check that the correct MAC is generated for an empty message.
+  // The keys and test vectors are from the NIST spec, RFC 4493.
   //----------------------------------------------------------------
   task tc3_empty_message;
     begin
+      inc_tc_ctr();
+
+      tc_correct = 1;
+      $display("TC3: Check that correct MAC is generated for an empty message.");
+
+      init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
+               AES_128_BIT_KEY);
+      wait_ready();
+
+      write_word(ADDR_FINAL_SIZE, 32'h0);
+      write_word(ADDR_CTRL, CTRL_FINAL_BIT);
+
+      wait_ready();
     end
   endtask // cmac_test
 
@@ -554,6 +574,7 @@ module tb_cmac();
   initial
     begin : main
       $display("*** Testbench for CMAC started ***");
+      $display("");
 
       init_sim();
 
