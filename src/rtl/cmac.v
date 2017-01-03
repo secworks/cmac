@@ -2,7 +2,9 @@
 //
 // cmac.v
 // ------
-// CMAC based on AES.
+// CMAC based on AES. Support for 128 and 256 bit keys. Generates
+// 128 bit MAC. The core is compatible with NIST SP 800-38 B and
+// as used in RFC 4493.
 //
 //
 // Author: Joachim Strombergson
