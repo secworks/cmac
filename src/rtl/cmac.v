@@ -87,17 +87,14 @@ module cmac(
 
   localparam BMUX_ZERO        = 0;
   localparam BMUX_MESSAGE     = 1;
-  localparam BMUX_XOR_MESSAGE = 2;
-  localparam BMUX_XOR_TWEAK   = 3;
+  localparam BMUX_TWEAK       = 2;
 
   localparam CTRL_IDLE        = 0;
   localparam CTRL_INIT_CORE   = 1;
   localparam CTRL_GEN_SUBKEYS = 2;
-  localparam CTRL_FIRST_BLOCK = 3;
-  localparam CTRL_NEXT_BLOCK  = 4;
-  localparam CTRL_FINAL_BLOCK = 5;
-  localparam CTRL_TWEAK       = 6;
-  localparam CTRL_DONE        = 7;
+  localparam CTRL_NEXT_BLOCK  = 3;
+  localparam CTRL_FINAL_BLOCK = 4;
+  localparam CTRL_DONE        = 5;
 
   localparam R128 = {120'h0, 8'b10000111};
   localparam AES_BLOCK_SIZE = 128;
@@ -119,6 +116,11 @@ module cmac(
   reg           key_we;
 
   reg [127 : 0] result_reg;
+  reg [127 : 0] result_new;
+  reg           result_we;
+  reg           reset_result_reg;
+  reg           update_result_reg;
+
   reg           valid_reg;
   reg           valid_new;
   reg           valid_we;
@@ -221,7 +223,8 @@ module cmac(
         end
       else
         begin
-          result_reg <= core_result;
+          if (result_we)
+            result_reg <= result_new;
 
           if (ready_we)
             ready_reg <= ready_new;
@@ -335,6 +338,18 @@ module cmac(
       reg [127 : 0] tweaked_block;
 
 
+      // Handle result reg updates and clear
+      if (reset_result_reg)
+        begin
+          result_new = 128'h0;
+          result_we  = 1;
+        end
+      if (update_result_reg)
+        begin
+          result_new = core_result;
+          result_we  = 1;
+        end
+
       // Generation of subkey k1 and k2.
       k1_new = {core_result[126 : 0], 1'b0};
       if (core_result[127])
@@ -388,14 +403,10 @@ module cmac(
           core_block = 128'h0;
 
         BMUX_MESSAGE:
-          core_block  = {block_reg[0], block_reg[1],
-                         block_reg[2], block_reg[3]};
-
-        BMUX_XOR_MESSAGE:
           core_block  = result_reg ^ {block_reg[0], block_reg[1],
                                       block_reg[2], block_reg[3]};
 
-        BMUX_XOR_TWEAK:
+        BMUX_TWEAK:
           core_block  = result_reg ^ tweaked_block;
       endcase // case (bmux_ctrl)
     end
@@ -408,27 +419,30 @@ module cmac(
   //----------------------------------------------------------------
   always @*
     begin : cmac_ctrl
-      core_init     = 0;
-      core_next     = 0;
-      bmux_ctrl     = BMUX_ZERO;
-      k1_k2_we      = 0;
-      ready_new     = 0;
-      ready_we      = 0;
-      valid_new     = 0;
-      valid_we      = 0;
-      cmac_ctrl_new = CTRL_IDLE;
-      cmac_ctrl_we  = 0;
+      core_init         = 0;
+      core_next         = 0;
+      bmux_ctrl         = BMUX_ZERO;
+      reset_result_reg  = 0;
+      update_result_reg = 0;
+      k1_k2_we          = 0;
+      ready_new         = 0;
+      ready_we          = 0;
+      valid_new         = 0;
+      valid_we          = 0;
+      cmac_ctrl_new     = CTRL_IDLE;
+      cmac_ctrl_we      = 0;
 
       case (cmac_ctrl_reg)
         CTRL_IDLE:
           begin
             if (init)
               begin
-                ready_new     = 0;
-                ready_we      = 1;
-                valid_new     = 0;
-                valid_we      = 1;
-                core_init     = 1;
+                ready_new        = 0;
+                ready_we         = 1;
+                valid_new        = 0;
+                valid_we         = 1;
+                core_init        = 1;
+                reset_result_reg = 1;
                 cmac_ctrl_new = CTRL_INIT_CORE;
                 cmac_ctrl_we  = 1;
               end
@@ -437,6 +451,8 @@ module cmac(
               begin
                 ready_new     = 0;
                 ready_we      = 1;
+                core_next     = 1;
+                bmux_ctrl     = BMUX_MESSAGE;
                 cmac_ctrl_new = CTRL_NEXT_BLOCK;
                 cmac_ctrl_we  = 1;
               end
@@ -445,6 +461,7 @@ module cmac(
               begin
                 ready_new     = 0;
                 ready_we      = 1;
+                bmux_ctrl     = BMUX_TWEAK;
                 cmac_ctrl_new = CTRL_FINAL_BLOCK;
                 cmac_ctrl_we  = 1;
               end
@@ -473,36 +490,28 @@ module cmac(
               end
           end
 
-        CTRL_FIRST_BLOCK:
-          begin
-            cmac_ctrl_new = CTRL_IDLE;
-            cmac_ctrl_we  = 1;
-          end
-
         CTRL_NEXT_BLOCK:
           begin
-            cmac_ctrl_new = CTRL_IDLE;
-            cmac_ctrl_we  = 1;
+            if (core_ready)
+              begin
+                update_result_reg = 1;
+                cmac_ctrl_new     = CTRL_IDLE;
+                cmac_ctrl_we      = 1;
+              end
           end
 
         CTRL_FINAL_BLOCK:
           begin
-            ready_new     = 1;
-            ready_we      = 1;
-            cmac_ctrl_new = CTRL_IDLE;
-            cmac_ctrl_we  = 1;
-          end
-
-        CTRL_TWEAK:
-          begin
-            cmac_ctrl_new = CTRL_IDLE;
-            cmac_ctrl_we  = 1;
-          end
-
-        CTRL_DONE:
-          begin
-            cmac_ctrl_new = CTRL_IDLE;
-            cmac_ctrl_we  = 1;
+            if (core_ready)
+              begin
+                update_result_reg = 1;
+                valid_new         = 1;
+                valid_we          = 1;
+                ready_new         = 1;
+                ready_we          = 1;
+                cmac_ctrl_new     = CTRL_IDLE;
+                cmac_ctrl_we      = 1;
+              end
           end
 
         default:
