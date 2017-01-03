@@ -463,6 +463,7 @@ module cmac(
               begin
                 ready_new     = 0;
                 ready_we      = 1;
+                core_next     = 1;
                 bmux_ctrl     = BMUX_TWEAK;
                 cmac_ctrl_new = CTRL_FINAL_BLOCK;
                 cmac_ctrl_we  = 1;

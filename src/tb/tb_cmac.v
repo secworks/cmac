@@ -43,7 +43,7 @@ module tb_cmac();
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam DEBUG = 0;
+  localparam DEBUG = 1;
 
   localparam CLK_HALF_PERIOD = 1;
   localparam CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
@@ -548,7 +548,9 @@ module tb_cmac();
   // The keys and test vectors are from the NIST spec, RFC 4493.
   //----------------------------------------------------------------
   task tc3_empty_message;
-    begin
+    begin : tc3
+      integer i;
+
       inc_tc_ctr();
 
       tc_correct = 1;
@@ -558,10 +560,13 @@ module tb_cmac();
                AES_128_BIT_KEY);
       wait_ready();
 
-      write_word(ADDR_FINAL_SIZE, 32'h0);
-      write_word(ADDR_CTRL, CTRL_FINAL_BIT);
+      $display("TC3: cmac initialized. Now for the final message.");
 
+      write_word(ADDR_FINAL_SIZE, 32'h0);
+      write_word(ADDR_CTRL, (2 ** CTRL_FINAL_BIT));
       wait_ready();
+
+      $display("TC3: cmac finished.");
     end
   endtask // cmac_test
 
