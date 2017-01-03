@@ -66,7 +66,7 @@ module cmac(
   localparam STATUS_READY_BIT = 0;
   localparam STATUS_VALID_BIT = 1;
 
-  localparam ADDR_FINAL_SIZE  = 8'h0b;
+  localparam ADDR_FINAL_SIZE = 8'h0b;
 
   localparam ADDR_KEY0        = 8'h10;
   localparam ADDR_KEY7        = 8'h17;
@@ -487,6 +487,8 @@ module cmac(
 
         CTRL_FINAL_BLOCK:
           begin
+            ready_new     = 1;
+            ready_we      = 1;
             cmac_ctrl_new = CTRL_IDLE;
             cmac_ctrl_we  = 1;
           end
