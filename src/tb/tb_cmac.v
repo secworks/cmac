@@ -170,20 +170,21 @@ module tb_cmac();
   //----------------------------------------------------------------
   task dump_dut_state;
     begin
-      $display("cycle: 0x%016x", cycle_ctr);
-      $display("State of DUT");
-      $display("------------");
-      $display("ctrl:   init   = 0x%01x, next = 0x%01x", dut.init, dut.next);
-      $display("config: length = 0x%01x ", dut.keylen_reg);
+      $display("cycle:  0x%016x", cycle_ctr);
+      $display("ctrl:   init = 0x%01x, next = 0x%01x", dut.init, dut.next);
+      $display("config: keylength   = 0x%01x ", dut.keylen_reg);
+      $display("config: blocklength = 0x%01x ", dut.final_size_reg);
       $display("k1 = 0x%016x, k2 = 0x%016x", dut.k1_reg, dut.k2_reg);
-      $display("ready = 0x%01x, valid = 0x%01x, ctrl_state = 0x%02x",
-               dut.ready_reg, dut.valid_reg, dut.cmac_ctrl_reg);
-      $display("block: 0x%08x, 0x%08x, 0x%08x, 0x%08x",
+      $display("ready = 0x%01x, valid = 0x%01x, result_we = 0x%01x, ctrl_state = 0x%02x",
+               dut.ready_reg, dut.valid_reg, dut.result_we, dut.cmac_ctrl_reg);
+      $display("block:  0x%08x%08x%08x%08x",
                dut.block_reg[0], dut.block_reg[1], dut.block_reg[2], dut.block_reg[3]);
+      $display("result: 0x%032x", dut.result_reg);
       $display("");
-      $display("core ready: 0x%01x, core valid: 0x%01x",
-               dut.core_ready, dut.core_valid);
-      $display("core result: 0x%064x ", dut.core_result);
+      $display("core_init = 0x%01x, core_next = 0x%01x, core_ready = 0x%01x, core_valid = 0x%01x",
+               dut.core_init, dut.core_next, dut.core_ready, dut.core_valid);
+      $display("core block:  0x%032x", dut.core_block);
+      $display("core result: 0x%032x", dut.core_result);
       $display("");
     end
   endtask // dump_dut_state
@@ -546,6 +547,8 @@ module tb_cmac();
   //
   // Check that the correct MAC is generated for an empty message.
   // The keys and test vectors are from the NIST spec, RFC 4493.
+  //
+  // Expected: bb1d6929 e9593728 7fa37d12 9b756746
   //----------------------------------------------------------------
   task tc3_empty_message;
     begin : tc3
@@ -567,6 +570,7 @@ module tb_cmac();
       wait_ready();
 
       $display("TC3: cmac finished.");
+
     end
   endtask // cmac_test
 
