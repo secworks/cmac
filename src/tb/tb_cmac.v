@@ -795,6 +795,63 @@ module tb_cmac();
 
 
   //----------------------------------------------------------------
+  // tc7_key256_four_block_message
+  //
+  // Check that the correct ICV is generated for a message that
+  // consists of four complete (64 bytes) blocks. In this test
+  // the the key is 256 bits.
+  // The keys and test vectors are from the NIST spec.
+  //----------------------------------------------------------------
+  task tc7_key256_four_block_message;
+    begin : tc7
+      integer i;
+
+      inc_tc_ctr();
+      tc_correct = 1;
+
+      $display("TC7: Check that correct ICV is generated for a four block message usint a 256 bit key.");
+      init_key(256'h603deb10_15ca71be_2b73aef0_857d7781_1f352c07_3b6108d7_2d9810a3_0914dff4,
+               AES_256_BIT_KEY);
+      wait_ready();
+
+      $display("TC7: cmac initialized. Now we process four full blocks.");
+      write_block(128'h6bc1bee2_2e409f96_e93d7e11_7393172a);
+      write_word(ADDR_CTRL, (2 ** CTRL_NEXT_BIT));
+      wait_ready();
+
+      write_block(128'hae2d8a57_1e03ac9c_9eb76fac_45af8e51);
+      write_word(ADDR_CTRL, (2 ** CTRL_NEXT_BIT));
+      wait_ready();
+
+      write_block(128'h30c81c46_a35ce411_e5fbc119_1a0a52ef);
+      write_word(ADDR_CTRL, (2 ** CTRL_NEXT_BIT));
+      wait_ready();
+
+      write_block(128'hf69f2445_df4f9b17_ad2b417b_e66c3710);
+      write_word(ADDR_FINAL_SIZE, AES_BLOCK_SIZE);
+      write_word(ADDR_CTRL, (2 ** CTRL_FINAL_BIT));
+      wait_ready();
+      $display("TC7: cmac finished.");
+      read_result();
+
+      if (result_data != 128'h51f0bebf_7e3b9d92_fc497417_79363cfe)
+        begin
+          tc_correct = 0;
+          inc_error_ctr();
+          $display("TC7: Error - Expected 0x51f0bebf_7e3b9d92_fc497417_79363cfe, got 0x%032x",
+                   result_data);
+        end
+
+      if (tc_correct)
+        $display("TC7: SUCCESS - ICV for four block message using 256 bit key correctly generated.");
+      else
+        $display("TC7: NO SUCCESS - ICV for four block message using 256 bit key not correctly generated.");
+      $display("");
+    end
+  endtask // tc7
+
+
+  //----------------------------------------------------------------
   // main
   //
   // The main test functionality.
@@ -812,6 +869,7 @@ module tb_cmac();
       tc4_single_block_message();
       tc5_two_and_a_half_block_message();
       tc6_four_block_message();
+      tc7_key256_four_block_message();
 
       display_test_results();
 
