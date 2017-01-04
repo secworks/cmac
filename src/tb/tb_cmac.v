@@ -45,8 +45,10 @@ module tb_cmac();
   //----------------------------------------------------------------
   localparam DEBUG = 0;
 
+
   localparam CLK_HALF_PERIOD = 1;
   localparam CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
+
 
   // The DUT address map.
   localparam ADDR_NAME0       = 8'h00;
@@ -86,11 +88,14 @@ module tb_cmac();
   localparam ADDR_RESULT2     = 8'h32;
   localparam ADDR_RESULT3     = 8'h33;
 
+
   localparam AES_128_BIT_KEY = 0;
   localparam AES_256_BIT_KEY = 1;
 
+
   localparam AES_DECIPHER = 1'b0;
   localparam AES_ENCIPHER = 1'b1;
+
 
   localparam AES_BLOCK_SIZE = 128;
 
@@ -435,8 +440,8 @@ module tb_cmac();
       integer i;
 
       inc_tc_ctr();
-
       tc_correct = 1;
+
       $display("TC1: Check that reset clears all registers in cmac.");
       reset_dut();
 
@@ -549,10 +554,9 @@ module tb_cmac();
   task tc2_gen_subkeys;
     begin : tc2
       inc_tc_ctr();
-
       tc_correct = 1;
-      $display("TC2: Check that k1 and k2 subkeys are correctly generated.");
 
+      $display("TC2: Check that k1 and k2 subkeys are correctly generated.");
       init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
                AES_128_BIT_KEY);
       wait_ready();
@@ -598,8 +602,8 @@ module tb_cmac();
       integer i;
 
       inc_tc_ctr();
-
       tc_correct = 1;
+
       $display("TC3: Check that correct ICV is generated for an empty message.");
 
       init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
@@ -644,8 +648,8 @@ module tb_cmac();
       integer i;
 
       inc_tc_ctr();
-
       tc_correct = 1;
+
       $display("TC4: Check that correct ICV is generated for a single block message.");
 
       init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
@@ -692,8 +696,8 @@ module tb_cmac();
       integer i;
 
       inc_tc_ctr();
-
       tc_correct = 1;
+
       $display("TC5: Check that correct ICV is generated for a two and a half block message.");
       init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
                AES_128_BIT_KEY);
@@ -726,9 +730,9 @@ module tb_cmac();
         end
 
       if (tc_correct)
-        $display("TC5: SUCCESS - ICV for single block message correctly generated.");
+        $display("TC5: SUCCESS - ICV for two and a half block message correctly generated.");
       else
-        $display("TC5: NO SUCCESS - ICV for single block message not correctly generated.");
+        $display("TC5: NO SUCCESS - ICV for two and a half block message not correctly generated.");
       $display("");
     end
   endtask // tc5

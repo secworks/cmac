@@ -517,6 +517,8 @@ module cmac(
             if (core_ready)
               begin
                 update_result_reg = 1;
+                ready_new         = 1;
+                ready_we          = 1;
                 cmac_ctrl_new     = CTRL_IDLE;
                 cmac_ctrl_we      = 1;
               end
