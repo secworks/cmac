@@ -667,7 +667,7 @@ module tb_cmac();
         begin
           tc_correct = 0;
           inc_error_ctr();
-          $display("TC4: Error - Expected 0xbb1d6929e95937287fa37d129b756746, got 0x%032x",
+          $display("TC4: Error - Expected 0x070a16b4_6b4d4144_f79bdd9d_d04a287c, got 0x%032x",
                    result_data);
         end
 
@@ -678,6 +678,60 @@ module tb_cmac();
       $display("");
     end
   endtask // tc4
+
+
+  //----------------------------------------------------------------
+  // tc5_two_and_a_half_block_message
+  //
+  // Check that the correct ICV is generated for a message that
+  // consists of two and a half (40 bytes) blocks.
+  // The keys and test vectors are from the NIST spec, RFC 4493.
+  //----------------------------------------------------------------
+  task tc5_two_and_a_half_block_message;
+    begin : tc5
+      integer i;
+
+      inc_tc_ctr();
+
+      tc_correct = 1;
+      $display("TC5: Check that correct ICV is generated for a two and a half block message.");
+      init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
+               AES_128_BIT_KEY);
+      wait_ready();
+
+      $display("TC5: cmac initialized. Now we process two full blocks.");
+      write_block(128'h6bc1bee2_2e409f96_e93d7e11_7393172a);
+      write_word(ADDR_CTRL, (2 ** CTRL_NEXT_BIT));
+      wait_ready();
+      $display("TC5: First block done.");
+      write_block(128'hae2d8a57_1e03ac9c_9eb76fac_45af8e51);
+      write_word(ADDR_CTRL, (2 ** CTRL_NEXT_BIT));
+      wait_ready();
+      $display("TC5: Second block done.");
+
+      $display("TC5: Now we process the final half block.");
+      write_block(128'h30c81c46_a35ce411_00000000_00000000);
+      write_word(ADDR_FINAL_SIZE, 64);
+      write_word(ADDR_CTRL, (2 ** CTRL_FINAL_BIT));
+      wait_ready();
+      $display("TC5: cmac finished.");
+      read_result();
+
+      if (result_data != 128'hdfa66747_de9ae630_30ca3261_1497c827)
+        begin
+          tc_correct = 0;
+          inc_error_ctr();
+          $display("TC5: Error - Expected 0xdfa66747_de9ae630_30ca3261_1497c827, got 0x%032x",
+                   result_data);
+        end
+
+      if (tc_correct)
+        $display("TC5: SUCCESS - ICV for single block message correctly generated.");
+      else
+        $display("TC5: NO SUCCESS - ICV for single block message not correctly generated.");
+      $display("");
+    end
+  endtask // tc5
 
 
   //----------------------------------------------------------------
@@ -696,6 +750,7 @@ module tb_cmac();
       tc2_gen_subkeys();
       tc3_empty_message();
       tc4_single_block_message();
+      tc5_two_and_a_half_block_message();
 
       display_test_results();
 
