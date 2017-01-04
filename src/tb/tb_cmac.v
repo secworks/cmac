@@ -275,11 +275,25 @@ module tb_cmac();
 
 
   //----------------------------------------------------------------
+  // pause_finish()
+  //
+  // Pause for a given number of cycles and then finish sim.
+  //----------------------------------------------------------------
+  task pause_finish(input [31 : 0] num_cycles);
+    begin
+      $display("Pausing for %04d cycles and then finishing hard.", num_cycles);
+      #(num_cycles * CLK_PERIOD);
+      $finish;
+    end
+  endtask // pause_finish
+
+
+  //----------------------------------------------------------------
   // write_word()
   //
   // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
-  task write_word(input [11 : 0]  address,
+  task write_word(input [11 : 0] address,
                   input [31 : 0] word);
     begin
       if (DEBUG)
@@ -813,6 +827,7 @@ module tb_cmac();
       init_key(256'h603deb10_15ca71be_2b73aef0_857d7781_1f352c07_3b6108d7_2d9810a3_0914dff4,
                AES_256_BIT_KEY);
       wait_ready();
+      pause_finish(10);
 
       $display("TC7: cmac initialized. Now we process four full blocks.");
       write_block(128'h6bc1bee2_2e409f96_e93d7e11_7393172a);
@@ -834,11 +849,11 @@ module tb_cmac();
       $display("TC7: cmac finished.");
       read_result();
 
-      if (result_data != 128'h51f0bebf_7e3b9d92_fc497417_79363cfe)
+      if (result_data != 128'he1992190_549f6ed5_696a2c05_6c315410)
         begin
           tc_correct = 0;
           inc_error_ctr();
-          $display("TC7: Error - Expected 0x51f0bebf_7e3b9d92_fc497417_79363cfe, got 0x%032x",
+          $display("TC7: Error - Expected 0xe1992190_549f6ed5_696a2c05_6c315410, got 0x%032x",
                    result_data);
         end
 
