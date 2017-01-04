@@ -430,14 +430,7 @@ module tb_cmac();
       write_word(ADDR_KEY6, key[63   :  32]);
       write_word(ADDR_KEY7, key[31   :   0]);
 
-      if (key_length)
-        begin
-          write_word(ADDR_CONFIG, 8'h02);
-        end
-      else
-        begin
-          write_word(ADDR_CONFIG, 8'h00);
-        end
+      write_word(ADDR_CONFIG, key_length);
 
       write_word(ADDR_CTRL, 8'h01);
     end
@@ -827,7 +820,6 @@ module tb_cmac();
       init_key(256'h603deb10_15ca71be_2b73aef0_857d7781_1f352c07_3b6108d7_2d9810a3_0914dff4,
                AES_256_BIT_KEY);
       wait_ready();
-      pause_finish(10);
 
       $display("TC7: cmac initialized. Now we process four full blocks.");
       write_block(128'h6bc1bee2_2e409f96_e93d7e11_7393172a);
