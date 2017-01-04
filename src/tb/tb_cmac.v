@@ -43,7 +43,7 @@ module tb_cmac();
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam DEBUG = 1;
+  localparam DEBUG = 0;
 
   localparam CLK_HALF_PERIOD = 1;
   localparam CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
@@ -171,12 +171,13 @@ module tb_cmac();
   task dump_dut_state;
     begin
       $display("cycle:  0x%016x", cycle_ctr);
-      $display("ctrl:   init = 0x%01x, next = 0x%01x", dut.init, dut.next);
+      $display("ctrl:   init_reg = 0x%01x, next_reg = 0x%01x, finalize_reg = 0x%01x",
+               dut.init_reg, dut.next_reg, dut.finalize_reg);
       $display("config: keylength   = 0x%01x ", dut.keylen_reg);
       $display("config: blocklength = 0x%01x ", dut.final_size_reg);
       $display("k1 = 0x%016x, k2 = 0x%016x", dut.k1_reg, dut.k2_reg);
-      $display("ready = 0x%01x, valid = 0x%01x, result_we = 0x%01x, ctrl_state = 0x%02x",
-               dut.ready_reg, dut.valid_reg, dut.result_we, dut.cmac_ctrl_reg);
+      $display("ready = 0x%01x, valid = 0x%01x, result_we = 0x%01x, block_mux = 0x%02x, ctrl_state = 0x%02x",
+               dut.ready_reg, dut.valid_reg, dut.result_we, dut.bmux_ctrl, dut.cmac_ctrl_reg);
       $display("block:  0x%08x%08x%08x%08x",
                dut.block_reg[0], dut.block_reg[1], dut.block_reg[2], dut.block_reg[3]);
       $display("result: 0x%032x", dut.result_reg);
@@ -536,7 +537,6 @@ module tb_cmac();
         $display("TC2: SUCCESS - K1 and K2 subkeys correctly generated.");
       else
         $display("TC2: NO SUCCESS - Subkeys not correctly generated.");
-
       $display("");
     end
   endtask // cmac_test
@@ -548,7 +548,7 @@ module tb_cmac();
   // Check that the correct MAC is generated for an empty message.
   // The keys and test vectors are from the NIST spec, RFC 4493.
   //
-  // Expected: bb1d6929 e9593728 7fa37d12 9b756746
+  // Expected:
   //----------------------------------------------------------------
   task tc3_empty_message;
     begin : tc3
@@ -570,7 +570,21 @@ module tb_cmac();
       wait_ready();
 
       $display("TC3: cmac finished.");
+      read_result();
 
+      if (result_data != 128'hbb1d6929e95937287fa37d129b756746)
+        begin
+          tc_correct = 0;
+          inc_error_ctr();
+          $display("TC3: Error - Expected 0xbb1d6929e95937287fa37d129b756746, got 0x%032x",
+                   result_data);
+        end
+
+      if (tc_correct)
+        $display("TC3: SUCCESS - ICV for empty message correctly generated.");
+      else
+        $display("TC3: NO SUCCESS - ICV for empty message not correctly generated.");
+      $display("");
     end
   endtask // cmac_test
 
