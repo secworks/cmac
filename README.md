@@ -20,6 +20,4 @@ this information.
 
 
 ## Status ##
-Core just started.
-Python model being developed.
-Testbench just started.
+Core works for 128 bit keys.
