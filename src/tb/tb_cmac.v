@@ -92,6 +92,8 @@ module tb_cmac();
   localparam AES_DECIPHER = 1'b0;
   localparam AES_ENCIPHER = 1'b1;
 
+  localparam AES_BLOCK_SIZE = 128;
+
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -566,10 +568,8 @@ module tb_cmac();
   //----------------------------------------------------------------
   // tc3_empty_message
   //
-  // Check that the correct MAC is generated for an empty message.
+  // Check that the correct ICV is generated for an empty message.
   // The keys and test vectors are from the NIST spec, RFC 4493.
-  //
-  // Expected:
   //----------------------------------------------------------------
   task tc3_empty_message;
     begin : tc3
@@ -578,13 +578,13 @@ module tb_cmac();
       inc_tc_ctr();
 
       tc_correct = 1;
-      $display("TC3: Check that correct MAC is generated for an empty message.");
+      $display("TC3: Check that correct ICV is generated for an empty message.");
 
       init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
                AES_128_BIT_KEY);
       wait_ready();
 
-      $display("TC3: cmac initialized. Now for the final message.");
+      $display("TC3: cmac initialized. Now for the final, empty message block.");
 
       write_word(ADDR_FINAL_SIZE, 32'h0);
       write_word(ADDR_CTRL, (2 ** CTRL_FINAL_BIT));
@@ -611,6 +611,54 @@ module tb_cmac();
 
 
   //----------------------------------------------------------------
+  // tc4_single_block_message
+  //
+  // Check that the correct ICV is generated for a single block
+  // message.  The keys and test vectors are from the NIST spec,
+  // RFC 4493.
+  //----------------------------------------------------------------
+  task tc4_single_block_message;
+    begin : tc4
+      integer i;
+
+      inc_tc_ctr();
+
+      tc_correct = 1;
+      $display("TC4: Check that correct ICV is generated for a single block message.");
+
+      init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
+               AES_128_BIT_KEY);
+      wait_ready();
+
+      $display("TC4: cmac initialized. Now for the final, full message block.");
+
+      write_block(128'h6bc1bee2_2e409f96_e93d7e11_7393172a);
+
+      write_word(ADDR_FINAL_SIZE, AES_BLOCK_SIZE);
+      write_word(ADDR_CTRL, (2 ** CTRL_FINAL_BIT));
+      wait_ready();
+
+      $display("TC4: cmac finished.");
+      read_result();
+
+      if (result_data != 128'h070a16b4_6b4d4144_f79bdd9d_d04a287c)
+        begin
+          tc_correct = 0;
+          inc_error_ctr();
+          $display("TC4: Error - Expected 0xbb1d6929e95937287fa37d129b756746, got 0x%032x",
+                   result_data);
+        end
+
+      if (tc_correct)
+        $display("TC4: SUCCESS - ICV for single block message correctly generated.");
+      else
+        $display("TC4: NO SUCCESS - ICV for single block message not correctly generated.");
+      $display("");
+    end
+  endtask // tc4
+
+
+  //----------------------------------------------------------------
   // main
   //
   // The main test functionality.
@@ -625,6 +673,7 @@ module tb_cmac();
       tc1_check_reset();
       tc2_gen_subkeys();
       tc3_empty_message();
+      tc4_single_block_message();
 
       display_test_results();
 
