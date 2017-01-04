@@ -301,7 +301,7 @@ module cmac(
                 key_we = 1;
 
               if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK3))
-                key_we = 1;
+                block_we = 1;
 
               case (address)
                 ADDR_CTRL:

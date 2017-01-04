@@ -175,13 +175,14 @@ module tb_cmac();
       $display("cycle:  0x%016x", cycle_ctr);
       $display("ctrl:   init_reg = 0x%01x, next_reg = 0x%01x, finalize_reg = 0x%01x",
                dut.init_reg, dut.next_reg, dut.finalize_reg);
-      $display("config: keylength   = 0x%01x ", dut.keylen_reg);
-      $display("config: blocklength = 0x%01x ", dut.final_size_reg);
+      $display("config: keylength = 0x%01x, final blocklength = 0x%01x",
+               dut.keylen_reg, dut.final_size_reg);
       $display("k1 = 0x%016x, k2 = 0x%016x", dut.k1_reg, dut.k2_reg);
       $display("ready = 0x%01x, valid = 0x%01x, result_we = 0x%01x, block_mux = 0x%02x, ctrl_state = 0x%02x",
                dut.ready_reg, dut.valid_reg, dut.result_we, dut.bmux_ctrl, dut.cmac_ctrl_reg);
       $display("block:  0x%08x%08x%08x%08x",
                dut.block_reg[0], dut.block_reg[1], dut.block_reg[2], dut.block_reg[3]);
+      $display("tweaked_block: 0x%032x", dut.cmac_datapath.tweaked_block);
       $display("result: 0x%032x", dut.result_reg);
       $display("");
       $display("core_init = 0x%01x, core_next = 0x%01x, core_ready = 0x%01x, core_valid = 0x%01x",
@@ -331,6 +332,27 @@ module tb_cmac();
         end
     end
   endtask // read_word
+
+
+
+
+  //----------------------------------------------------------------
+  // read_block()
+  //
+  // Read the result block in the dut.
+  //----------------------------------------------------------------
+  task read_block;
+    begin
+      read_word(ADDR_BLOCK0);
+      result_data[127 : 096] = read_data;
+      read_word(ADDR_BLOCK1);
+      result_data[095 : 064] = read_data;
+      read_word(ADDR_BLOCK2);
+      result_data[063 : 032] = read_data;
+      read_word(ADDR_BLOCK3);
+      result_data[031 : 000] = read_data;
+    end
+  endtask // read_block
 
 
   //----------------------------------------------------------------
