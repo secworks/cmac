@@ -485,6 +485,27 @@ module tb_cmac();
           inc_error_ctr();
         end
 
+      if (dut.init_reg != 0)
+        begin
+          $display("TC1: ERROR - init_reg not properly reset.");
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
+      if (dut.next_reg != 0)
+        begin
+          $display("TC1: ERROR - next_reg not properly reset.");
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
+      if (dut.finalize_reg != 0)
+        begin
+          $display("TC1: ERROR - finalize_reg not properly reset.");
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
       if (tc_correct)
         $display("TC1: SUCCESS - All registers correctly reset.");
       else
@@ -492,7 +513,7 @@ module tb_cmac();
 
       $display("");
     end
-  endtask // cmac_test
+  endtask // tc1
 
 
   //----------------------------------------------------------------
@@ -539,7 +560,7 @@ module tb_cmac();
         $display("TC2: NO SUCCESS - Subkeys not correctly generated.");
       $display("");
     end
-  endtask // cmac_test
+  endtask // tc2
 
 
   //----------------------------------------------------------------
@@ -586,7 +607,7 @@ module tb_cmac();
         $display("TC3: NO SUCCESS - ICV for empty message not correctly generated.");
       $display("");
     end
-  endtask // cmac_test
+  endtask // tc3
 
 
   //----------------------------------------------------------------
