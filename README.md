@@ -14,10 +14,14 @@ and 256 bit keys. The ICV generated is 128 bit.
 
 
 ## Usage ##
-Note that the core expects information about number of bits in the final
-message block [1..128]. The core performs padding and tweak based on
-this information.
+The core expects information about number of bits in the final
+message block [1..128]. The core performs padding and final block tweak
+based on this information.
 
 
 ## Status ##
-Core works for 128 bit keys.
+Core has been implented and verified using testbench for testcases with
+zero, single and multiple block messages. Padding has been verified. The
+CMAC generation works with 128 and 256 bit keys.
+
+The core has not yet been implemented in hardware.
