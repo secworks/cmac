@@ -45,8 +45,10 @@ module tb_cmac();
   //----------------------------------------------------------------
   localparam DEBUG = 0;
 
+
   localparam CLK_HALF_PERIOD = 1;
   localparam CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
+
 
   // The DUT address map.
   localparam ADDR_NAME0       = 8'h00;
@@ -86,11 +88,14 @@ module tb_cmac();
   localparam ADDR_RESULT2     = 8'h32;
   localparam ADDR_RESULT3     = 8'h33;
 
+
   localparam AES_128_BIT_KEY = 0;
   localparam AES_256_BIT_KEY = 1;
 
+
   localparam AES_DECIPHER = 1'b0;
   localparam AES_ENCIPHER = 1'b1;
+
 
   localparam AES_BLOCK_SIZE = 128;
 
@@ -175,13 +180,14 @@ module tb_cmac();
       $display("cycle:  0x%016x", cycle_ctr);
       $display("ctrl:   init_reg = 0x%01x, next_reg = 0x%01x, finalize_reg = 0x%01x",
                dut.init_reg, dut.next_reg, dut.finalize_reg);
-      $display("config: keylength   = 0x%01x ", dut.keylen_reg);
-      $display("config: blocklength = 0x%01x ", dut.final_size_reg);
+      $display("config: keylength = 0x%01x, final blocklength = 0x%01x",
+               dut.keylen_reg, dut.final_size_reg);
       $display("k1 = 0x%016x, k2 = 0x%016x", dut.k1_reg, dut.k2_reg);
       $display("ready = 0x%01x, valid = 0x%01x, result_we = 0x%01x, block_mux = 0x%02x, ctrl_state = 0x%02x",
                dut.ready_reg, dut.valid_reg, dut.result_we, dut.bmux_ctrl, dut.cmac_ctrl_reg);
       $display("block:  0x%08x%08x%08x%08x",
                dut.block_reg[0], dut.block_reg[1], dut.block_reg[2], dut.block_reg[3]);
+      $display("tweaked_block: 0x%032x", dut.cmac_datapath.tweaked_block);
       $display("result: 0x%032x", dut.result_reg);
       $display("");
       $display("core_init = 0x%01x, core_next = 0x%01x, core_ready = 0x%01x, core_valid = 0x%01x",
@@ -269,11 +275,25 @@ module tb_cmac();
 
 
   //----------------------------------------------------------------
+  // pause_finish()
+  //
+  // Pause for a given number of cycles and then finish sim.
+  //----------------------------------------------------------------
+  task pause_finish(input [31 : 0] num_cycles);
+    begin
+      $display("Pausing for %04d cycles and then finishing hard.", num_cycles);
+      #(num_cycles * CLK_PERIOD);
+      $finish;
+    end
+  endtask // pause_finish
+
+
+  //----------------------------------------------------------------
   // write_word()
   //
   // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
-  task write_word(input [11 : 0]  address,
+  task write_word(input [11 : 0] address,
                   input [31 : 0] word);
     begin
       if (DEBUG)
@@ -333,6 +353,27 @@ module tb_cmac();
   endtask // read_word
 
 
+
+
+  //----------------------------------------------------------------
+  // read_block()
+  //
+  // Read the result block in the dut.
+  //----------------------------------------------------------------
+  task read_block;
+    begin
+      read_word(ADDR_BLOCK0);
+      result_data[127 : 096] = read_data;
+      read_word(ADDR_BLOCK1);
+      result_data[095 : 064] = read_data;
+      read_word(ADDR_BLOCK2);
+      result_data[063 : 032] = read_data;
+      read_word(ADDR_BLOCK3);
+      result_data[031 : 000] = read_data;
+    end
+  endtask // read_block
+
+
   //----------------------------------------------------------------
   // wait_ready()
   //
@@ -389,14 +430,7 @@ module tb_cmac();
       write_word(ADDR_KEY6, key[63   :  32]);
       write_word(ADDR_KEY7, key[31   :   0]);
 
-      if (key_length)
-        begin
-          write_word(ADDR_CONFIG, 8'h02);
-        end
-      else
-        begin
-          write_word(ADDR_CONFIG, 8'h00);
-        end
+      write_word(ADDR_CONFIG, key_length);
 
       write_word(ADDR_CTRL, 8'h01);
     end
@@ -413,8 +447,8 @@ module tb_cmac();
       integer i;
 
       inc_tc_ctr();
-
       tc_correct = 1;
+
       $display("TC1: Check that reset clears all registers in cmac.");
       reset_dut();
 
@@ -527,10 +561,9 @@ module tb_cmac();
   task tc2_gen_subkeys;
     begin : tc2
       inc_tc_ctr();
-
       tc_correct = 1;
-      $display("TC2: Check that k1 and k2 subkeys are correctly generated.");
 
+      $display("TC2: Check that k1 and k2 subkeys are correctly generated.");
       init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
                AES_128_BIT_KEY);
       wait_ready();
@@ -576,8 +609,8 @@ module tb_cmac();
       integer i;
 
       inc_tc_ctr();
-
       tc_correct = 1;
+
       $display("TC3: Check that correct ICV is generated for an empty message.");
 
       init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
@@ -622,8 +655,8 @@ module tb_cmac();
       integer i;
 
       inc_tc_ctr();
-
       tc_correct = 1;
+
       $display("TC4: Check that correct ICV is generated for a single block message.");
 
       init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
@@ -645,7 +678,7 @@ module tb_cmac();
         begin
           tc_correct = 0;
           inc_error_ctr();
-          $display("TC4: Error - Expected 0xbb1d6929e95937287fa37d129b756746, got 0x%032x",
+          $display("TC4: Error - Expected 0x070a16b4_6b4d4144_f79bdd9d_d04a287c, got 0x%032x",
                    result_data);
         end
 
@@ -656,6 +689,173 @@ module tb_cmac();
       $display("");
     end
   endtask // tc4
+
+
+  //----------------------------------------------------------------
+  // tc5_two_and_a_half_block_message
+  //
+  // Check that the correct ICV is generated for a message that
+  // consists of two and a half (40 bytes) blocks.
+  // The keys and test vectors are from the NIST spec, RFC 4493.
+  //----------------------------------------------------------------
+  task tc5_two_and_a_half_block_message;
+    begin : tc5
+      integer i;
+
+      inc_tc_ctr();
+      tc_correct = 1;
+
+      $display("TC5: Check that correct ICV is generated for a two and a half block message.");
+      init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
+               AES_128_BIT_KEY);
+      wait_ready();
+
+      $display("TC5: cmac initialized. Now we process two full blocks.");
+      write_block(128'h6bc1bee2_2e409f96_e93d7e11_7393172a);
+      write_word(ADDR_CTRL, (2 ** CTRL_NEXT_BIT));
+      wait_ready();
+      $display("TC5: First block done.");
+      write_block(128'hae2d8a57_1e03ac9c_9eb76fac_45af8e51);
+      write_word(ADDR_CTRL, (2 ** CTRL_NEXT_BIT));
+      wait_ready();
+      $display("TC5: Second block done.");
+
+      $display("TC5: Now we process the final half block.");
+      write_block(128'h30c81c46_a35ce411_00000000_00000000);
+      write_word(ADDR_FINAL_SIZE, 64);
+      write_word(ADDR_CTRL, (2 ** CTRL_FINAL_BIT));
+      wait_ready();
+      $display("TC5: cmac finished.");
+      read_result();
+
+      if (result_data != 128'hdfa66747_de9ae630_30ca3261_1497c827)
+        begin
+          tc_correct = 0;
+          inc_error_ctr();
+          $display("TC5: Error - Expected 0xdfa66747_de9ae630_30ca3261_1497c827, got 0x%032x",
+                   result_data);
+        end
+
+      if (tc_correct)
+        $display("TC5: SUCCESS - ICV for two and a half block message correctly generated.");
+      else
+        $display("TC5: NO SUCCESS - ICV for two and a half block message not correctly generated.");
+      $display("");
+    end
+  endtask // tc5
+
+
+  //----------------------------------------------------------------
+  // tc6_four_block_message
+  //
+  // Check that the correct ICV is generated for a message that
+  // consists of four complete (64 bytes) blocks.
+  // The keys and test vectors are from the NIST spec, RFC 4493.
+  //----------------------------------------------------------------
+  task tc6_four_block_message;
+    begin : tc6
+      integer i;
+
+      inc_tc_ctr();
+      tc_correct = 1;
+
+      $display("TC6: Check that correct ICV is generated for a four block message.");
+      init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
+               AES_128_BIT_KEY);
+      wait_ready();
+
+      $display("TC6: cmac initialized. Now we process four full blocks.");
+      write_block(128'h6bc1bee2_2e409f96_e93d7e11_7393172a);
+      write_word(ADDR_CTRL, (2 ** CTRL_NEXT_BIT));
+      wait_ready();
+
+      write_block(128'hae2d8a57_1e03ac9c_9eb76fac_45af8e51);
+      write_word(ADDR_CTRL, (2 ** CTRL_NEXT_BIT));
+      wait_ready();
+
+      write_block(128'h30c81c46_a35ce411_e5fbc119_1a0a52ef);
+      write_word(ADDR_CTRL, (2 ** CTRL_NEXT_BIT));
+      wait_ready();
+
+      write_block(128'hf69f2445_df4f9b17_ad2b417b_e66c3710);
+      write_word(ADDR_FINAL_SIZE, AES_BLOCK_SIZE);
+      write_word(ADDR_CTRL, (2 ** CTRL_FINAL_BIT));
+      wait_ready();
+      $display("TC6: cmac finished.");
+      read_result();
+
+      if (result_data != 128'h51f0bebf_7e3b9d92_fc497417_79363cfe)
+        begin
+          tc_correct = 0;
+          inc_error_ctr();
+          $display("TC6: Error - Expected 0x51f0bebf_7e3b9d92_fc497417_79363cfe, got 0x%032x",
+                   result_data);
+        end
+
+      if (tc_correct)
+        $display("TC6: SUCCESS - ICV for four block message correctly generated.");
+      else
+        $display("TC6: NO SUCCESS - ICV for four block message not correctly generated.");
+      $display("");
+    end
+  endtask // tc6
+
+
+  //----------------------------------------------------------------
+  // tc7_key256_four_block_message
+  //
+  // Check that the correct ICV is generated for a message that
+  // consists of four complete (64 bytes) blocks. In this test
+  // the the key is 256 bits.
+  // The keys and test vectors are from the NIST spec.
+  //----------------------------------------------------------------
+  task tc7_key256_four_block_message;
+    begin : tc7
+      integer i;
+
+      inc_tc_ctr();
+      tc_correct = 1;
+
+      $display("TC7: Check that correct ICV is generated for a four block message usint a 256 bit key.");
+      init_key(256'h603deb10_15ca71be_2b73aef0_857d7781_1f352c07_3b6108d7_2d9810a3_0914dff4,
+               AES_256_BIT_KEY);
+      wait_ready();
+
+      $display("TC7: cmac initialized. Now we process four full blocks.");
+      write_block(128'h6bc1bee2_2e409f96_e93d7e11_7393172a);
+      write_word(ADDR_CTRL, (2 ** CTRL_NEXT_BIT));
+      wait_ready();
+
+      write_block(128'hae2d8a57_1e03ac9c_9eb76fac_45af8e51);
+      write_word(ADDR_CTRL, (2 ** CTRL_NEXT_BIT));
+      wait_ready();
+
+      write_block(128'h30c81c46_a35ce411_e5fbc119_1a0a52ef);
+      write_word(ADDR_CTRL, (2 ** CTRL_NEXT_BIT));
+      wait_ready();
+
+      write_block(128'hf69f2445_df4f9b17_ad2b417b_e66c3710);
+      write_word(ADDR_FINAL_SIZE, AES_BLOCK_SIZE);
+      write_word(ADDR_CTRL, (2 ** CTRL_FINAL_BIT));
+      wait_ready();
+      $display("TC7: cmac finished.");
+      read_result();
+
+      if (result_data != 128'he1992190_549f6ed5_696a2c05_6c315410)
+        begin
+          tc_correct = 0;
+          inc_error_ctr();
+          $display("TC7: Error - Expected 0xe1992190_549f6ed5_696a2c05_6c315410, got 0x%032x",
+                   result_data);
+        end
+
+      if (tc_correct)
+        $display("TC7: SUCCESS - ICV for four block message using 256 bit key correctly generated.");
+      else
+        $display("TC7: NO SUCCESS - ICV for four block message using 256 bit key not correctly generated.");
+      $display("");
+    end
+  endtask // tc7
 
 
   //----------------------------------------------------------------
@@ -674,6 +874,9 @@ module tb_cmac();
       tc2_gen_subkeys();
       tc3_empty_message();
       tc4_single_block_message();
+      tc5_two_and_a_half_block_message();
+      tc6_four_block_message();
+      tc7_key256_four_block_message();
 
       display_test_results();
 

@@ -297,7 +297,7 @@ module cmac(
                 key_we = 1;
 
               if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK3))
-                key_we = 1;
+                block_we = 1;
 
               case (address)
                 ADDR_CTRL:
@@ -512,6 +512,8 @@ module cmac(
             if (core_ready)
               begin
                 update_result_reg = 1;
+                ready_new         = 1;
+                ready_we          = 1;
                 cmac_ctrl_new     = CTRL_IDLE;
                 cmac_ctrl_we      = 1;
               end

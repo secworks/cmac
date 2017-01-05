@@ -61,3 +61,16 @@ TODO: Add implementation results for Spartan-6 and Artix-7.
 
 - Python model is working but not complete and needs cleanup.
 - Some cleanup in RTL code still needed.
+=======
+The core expects information about number of bits in the final
+message block [1..128]. The core performs padding and final block tweak
+based on this information.
+
+
+## Status ##
+Core has been implented and verified using testbench for testcases with
+zero, single and multiple block messages. Padding has been verified. The
+CMAC generation works with 128 and 256 bit keys.
+
+The core has not yet been implemented in hardware.
+>>>>>>> da498ebe44408a39f5d39225ed3047310a6bf257
