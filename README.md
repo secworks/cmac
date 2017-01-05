@@ -46,31 +46,22 @@ that the ICV result is ready and valid.
 ## Implementation Results ##
 ### Altera Cyclone V ###
 Device: 5CGXFC7C7F23C8
-Logic utilization (ALMs): 2105
-Registers:                3052
-Clock speed:              99 MHz
+Logic utilization (ALMs): 2285
+Registers:                3171
+Clock speed:              91 MHz
 
 ### Xilinx ###
 TODO: Add implementation results for Spartan-6 and Artix-7.
 
 
 ## Status ##
-- Core has been verified againt test vectors from IETF and NIST.
-- Core has been implemented in hardware (Altera FPGA).
-- Testbench has been completed
+Core has been implemented and verified againt test vectors from IETF and
+NIST using testbench for testcases with zero, single and multiple block
+messages. Padding has been verified. The CMAC generation works with 128
+and 256 bit keys.
 
+Core has been implemented in hardware (Altera FPGA).
+
+TODO:
 - Python model is working but not complete and needs cleanup.
 - Some cleanup in RTL code still needed.
-=======
-The core expects information about number of bits in the final
-message block [1..128]. The core performs padding and final block tweak
-based on this information.
-
-
-## Status ##
-Core has been implented and verified using testbench for testcases with
-zero, single and multiple block messages. Padding has been verified. The
-CMAC generation works with 128 and 256 bit keys.
-
-The core has not yet been implemented in hardware.
->>>>>>> da498ebe44408a39f5d39225ed3047310a6bf257
