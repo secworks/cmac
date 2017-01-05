@@ -156,10 +156,6 @@ module cmac(
   //----------------------------------------------------------------
   reg [31 : 0]   tmp_read_data;
 
-  reg            init;
-  reg            next;
-  reg            finalize;
-
   reg            core_init;
   reg            core_next;
   wire           core_encdec;
@@ -356,14 +352,13 @@ module cmac(
       reg [127 : 0] padded_block;
       reg [127 : 0] tweaked_block;
 
-      result_we = 0;
+      result_new = 128'h0;
+      result_we  = 0;
 
       // Handle result reg updates and clear
       if (reset_result_reg)
-        begin
-          result_new = 128'h0;
-          result_we  = 1;
-        end
+        result_we  = 1;
+
       if (update_result_reg)
         begin
           result_new = core_result;
