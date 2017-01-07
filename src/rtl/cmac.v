@@ -413,6 +413,7 @@ module cmac(
 
 
       // Input mux for the AES core.
+      core_block = 128'h0;
       case (bmux_ctrl)
         BMUX_ZERO:
           core_block = 128'h0;
