@@ -112,7 +112,12 @@ def shift_words(wl):
 #-------------------------------------------------------------------
 def pad_block(block, bitlen):
     bw = ((block[0] << 96) + (block[1] << 64) + (block[2] << 32) + block[3]) & MAX128
-    return block
+    bitstr = "1" * bitlen + "1" + "0" * (127 - bitlen)
+    bitmask = int(bitstr, 2)
+    padded = bw & bitmask
+    pblock = ((padded >> 96) & 0xffffffff, (padded >> 64) & 0xffffffff,
+              (padded >> 32) & 0xffffffff, padded & 0xffffffff)
+    return pblock
 
 
 #-------------------------------------------------------------------
