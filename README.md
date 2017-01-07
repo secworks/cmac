@@ -50,8 +50,12 @@ Logic utilization (ALMs): 2285
 Registers:                3171
 Clock speed:              91 MHz
 
-### Xilinx ###
-TODO: Add implementation results for Spartan-6 and Artix-7.
+
+### Xilinx Artix-7 ###
+Device: xc7a200t-3fbg484
+Slices:    2721
+Registers: 2996
+Clock speed: 103 MHz
 
 
 ## Status ##
