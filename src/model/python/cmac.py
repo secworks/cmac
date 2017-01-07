@@ -111,6 +111,7 @@ def shift_words(wl):
 # range [0..127]
 #-------------------------------------------------------------------
 def pad_block(block, bitlen):
+    bw = ((block[0] << 96) + (block[1] << 64) + (block[2] << 32) + block[3]) & MAX128
     return block
 
 
