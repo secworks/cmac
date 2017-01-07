@@ -62,6 +62,13 @@ for a received message.
 - Clock speed: 91 MHz
 
 
+### Xilinx Spartan-6 ###
+- Device: xc6slx45-3fgg484
+- Slices:    2385
+- Registers: 3002
+- Clock speed: 100 MHz
+
+
 ## Status ##
 The core has been implemented and verified againt test vectors from IETF
 and NIST using testbench for testcases with zero, single and multiple
