@@ -64,7 +64,7 @@ NIST using testbench for testcases with zero, single and multiple block
 messages. Padding has been verified. The CMAC generation works with 128
 and 256 bit keys.
 
-Core has been implemented in hardware (Altera FPGA).
+Core has been implemented in hardware (Altera and Xilinx FPGAs).
 
 TODO:
 - Python model is working but not complete and needs cleanup.
