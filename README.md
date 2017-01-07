@@ -55,7 +55,7 @@ that the ICV result is ready and valid.
 - Device: xc7a200t-3fbg484
 - Slices:    2721
 - Registers: 2996
-- Clock speed: 103 MHz
+- Clock speed: 91 MHz
 
 
 ## Status ##
