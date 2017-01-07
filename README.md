@@ -72,4 +72,3 @@ The Core has been implemented in hardware (Altera and Xilinx FPGAs).
 
 TODO:
 - Python model is working but not complete and needs cleanup.
-- Some cleanup in RTL code still needed.
