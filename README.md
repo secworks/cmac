@@ -42,6 +42,10 @@ core and then the _finalize_ signal shall be asserted. The core will
 process the final block and then rainse _ready_ and _valid_ signalling
 that the ICV result is ready and valid.
 
+Note that the core does not provide verification of a given ICV. The
+caller is expected to perform this comparison after generating the ICV
+for a received message.
+
 
 ## Implementation Results ##
 ### Altera Cyclone V ###
@@ -59,12 +63,12 @@ that the ICV result is ready and valid.
 
 
 ## Status ##
-Core has been implemented and verified againt test vectors from IETF and
-NIST using testbench for testcases with zero, single and multiple block
-messages. Padding has been verified. The CMAC generation works with 128
-and 256 bit keys.
+The core has been implemented and verified againt test vectors from IETF
+and NIST using testbench for testcases with zero, single and multiple
+block messages. Padding has been verified. The CMAC ICV generation works
+with 128 and 256 bit keys.
 
-Core has been implemented in hardware (Altera and Xilinx FPGAs).
+The Core has been implemented in hardware (Altera and Xilinx FPGAs).
 
 TODO:
 - Python model is working but not complete and needs cleanup.
