@@ -111,7 +111,7 @@ def shift_words(wl):
 # range [0..127]
 #-------------------------------------------------------------------
 def pad_block(block, bitlen):
-    pass
+    return block
 
 
 #-------------------------------------------------------------------
@@ -239,6 +239,17 @@ def test_final():
 
 
 #-------------------------------------------------------------------
+# test_padding()
+#-------------------------------------------------------------------
+def test_padding():
+    block = (0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff)
+    for num_bits in range(128):
+        padded = pad_block(block, num_bits)
+        print("num bits: %03d" % num_bits, end=": ")
+        print_block(padded)
+
+
+#-------------------------------------------------------------------
 # main()
 #
 # If executed tests the ChaCha class using known test vectors.
@@ -251,7 +262,8 @@ def main():
     test_xor()
     test_cmac_subkey_gen()
     test_final()
-#    test_cmac()
+    test_padding()
+    #    test_cmac()
 
 
 #-------------------------------------------------------------------
