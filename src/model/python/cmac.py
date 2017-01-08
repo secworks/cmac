@@ -115,9 +115,9 @@ def pad_block(block, bitlen):
     bitstr = "1" * bitlen + "1" + "0" * (127 - bitlen)
     bitmask = int(bitstr, 2)
     padded = bw & bitmask
-    pblock = ((padded >> 96) & 0xffffffff, (padded >> 64) & 0xffffffff,
-              (padded >> 32) & 0xffffffff, padded & 0xffffffff)
-    return pblock
+    padded_block = ((padded >> 96) & 0xffffffff, (padded >> 64) & 0xffffffff,
+                    (padded >> 32) & 0xffffffff, padded & 0xffffffff)
+    return padded_block
 
 
 #-------------------------------------------------------------------
@@ -172,6 +172,7 @@ def cmac_gen_subkeys(key):
 def cmac(key, message):
     # Start by generating the subkeys
     (K1, K2) = cmac_gen_subkeys(key)
+    mlen = len(message)
 
 
 #-------------------------------------------------------------------
@@ -235,6 +236,7 @@ def test_cmac_subkey_gen():
 # Test final tweak.
 #-------------------------------------------------------------------
 def test_final():
+    print("Testing final block. Basically an empty message:")
     key = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
     final_block = (0x80000000, 0x00000000, 0x00000000, 0x00000000)
     k2 =          (0xf7ddac30, 0x6ae266cc, 0xf90bc11e, 0xe46d513b)
@@ -245,14 +247,34 @@ def test_final():
 
 
 #-------------------------------------------------------------------
+# test_zero_length_message()
+#
+# Test final tweak.
+#-------------------------------------------------------------------
+def test_zero_length_message():
+    print("Testing cmac of block with zero length:")
+    key = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
+    final_block = (0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff)
+    k2 =          (0xf7ddac30, 0x6ae266cc, 0xf90bc11e, 0xe46d513b)
+    paddded_block = pad_block(final_block, 0)
+    tweaked_final = xor_words(paddded_block, k2)
+    M = aes_encipher_block(key, tweaked_final)
+    expected = (0xbb1d6929, 0xe9593728, 0x7fa37d12, 0x9b756746)
+    check_block(expected, M)
+    print()
+
+
+#-------------------------------------------------------------------
 # test_padding()
 #-------------------------------------------------------------------
 def test_padding():
+    print("Testing padding of block based on number of data bits in block:")
     block = (0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff)
     for num_bits in range(128):
         padded = pad_block(block, num_bits)
         print("num bits: %03d" % num_bits, end=": ")
         print_block(padded)
+    print()
 
 
 #-------------------------------------------------------------------
@@ -269,7 +291,8 @@ def main():
     test_cmac_subkey_gen()
     test_final()
     test_padding()
-    #    test_cmac()
+    test_zero_length_message()
+    # test_cmac()
 
 
 #-------------------------------------------------------------------
