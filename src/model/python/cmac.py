@@ -60,7 +60,7 @@ from aes import *
 VERBOSE = True
 R128 = (0, 0, 0, 0x00000087)
 MAX128 = ((2**128) - 1)
-
+AES_BLOC_LENGTH = 128
 
 #-------------------------------------------------------------------
 # check_block()
@@ -167,12 +167,33 @@ def cmac_gen_subkeys(key):
 #-------------------------------------------------------------------
 # cmac()
 #
-# Notation follows the description in SP 800-38B
+# Notation follows the description in SP 800-38B. Message is in
+# blocks and final_length is number of bits in the final block
 #-------------------------------------------------------------------
-def cmac(key, message):
-    # Start by generating the subkeys
+def cmac(key, message. final_length):
+# Start by generating the subkeys
     (K1, K2) = cmac_gen_subkeys(key)
-    mlen = len(message)
+    state = (0x00000000, 0x00000000, 0x00000000, 0x00000000)
+    blocks = len(message)
+
+    if blocks == 0:
+        # Empty message.
+        paddded_block = pad_block(state, 0)
+        tweaked_final = xor_words(paddded_block, k2)
+        M = aes_encipher_block(key, tweaked_final)
+    else:
+        for i in range(blocks - 1):
+            state = xor_words(state, message[i])
+            M = aes_encipher_block(key, state)
+
+        if (final_length == AES_BLOCK_LENGTH)
+            tweak = xor_words(K1, message[(blocks - 1)])
+        else:
+            padded_block = pad_block(message[(blocks - 1)], final_length)
+            tweak = xor_words(K2, padded_block)
+        state = xor_words(state, message[i])
+        M = aes_encipher_block(key, state)
+    return M
 
 
 #-------------------------------------------------------------------
@@ -280,7 +301,7 @@ def test_padding():
 #-------------------------------------------------------------------
 # main()
 #
-# If executed tests the ChaCha class using known test vectors.
+# If executed tests the cmac function and its subfunctions.
 #-------------------------------------------------------------------
 def main():
     print("Testing the CMAC-AES mode")
