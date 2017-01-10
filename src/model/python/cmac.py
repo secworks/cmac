@@ -57,7 +57,7 @@ from aes import *
 #-------------------------------------------------------------------
 # Constants.
 #-------------------------------------------------------------------
-VERBOSE = True
+VERBOSE = False
 R128 = (0, 0, 0, 0x00000087)
 MAX128 = ((2**128) - 1)
 AES_BLOC_LENGTH = 128
@@ -112,11 +112,10 @@ def shift_words(wl):
 #-------------------------------------------------------------------
 def pad_block(block, bitlen):
     bw = ((block[0] << 96) + (block[1] << 64) + (block[2] << 32) + block[3]) & MAX128
-    bitstr = "1" * bitlen + "1" + "0" * (127 - bitlen)
-    print("Bitstring: %s" % bitstr)
-    print("length of Bitstring: %d" % len(bitstr))
+    bitstr = "1" * bitlen + "0" * (128 - bitlen)
     bitmask = int(bitstr, 2)
-    padded = bw & bitmask
+    masked = bw & bitmask
+    padded = masked + (1 << (127 - bitlen))
     padded_block = ((padded >> 96) & 0xffffffff, (padded >> 64) & 0xffffffff,
                     (padded >> 32) & 0xffffffff, padded & 0xffffffff)
     return padded_block
@@ -280,8 +279,7 @@ def test_zero_length_message():
     print("Testing cmac of block with zero length:")
     print("---------------------------------------")
     key = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
-#    final_block = (0x00000000, 0x00000000, 0x00000000, 0x00000000)
-    final_block = (0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff)
+    final_block = (0x00000000, 0x00000000, 0x00000000, 0x00000000)
     k2 = (0xf7ddac30, 0x6ae266cc, 0xf90bc11e, 0xe46d513b)
 
     paddded_block = pad_block(final_block, 0)
@@ -321,12 +319,12 @@ def main():
     print("=========================")
     print
 
-#    test_xor()
-#    test_cmac_subkey_gen()
-#    test_final()
-#    test_padding()
+    test_xor()
+    test_cmac_subkey_gen()
+    test_final()
+    test_padding()
     test_zero_length_message()
-#    test_cmac()
+    test_cmac()
 
 
 #-------------------------------------------------------------------
