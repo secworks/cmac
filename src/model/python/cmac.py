@@ -113,6 +113,8 @@ def shift_words(wl):
 def pad_block(block, bitlen):
     bw = ((block[0] << 96) + (block[1] << 64) + (block[2] << 32) + block[3]) & MAX128
     bitstr = "1" * bitlen + "1" + "0" * (127 - bitlen)
+    print("Bitstring: %s" % bitstr)
+    print("length of Bitstring: %d" % len(bitstr))
     bitmask = int(bitstr, 2)
     padded = bw & bitmask
     padded_block = ((padded >> 96) & 0xffffffff, (padded >> 64) & 0xffffffff,
@@ -278,7 +280,8 @@ def test_zero_length_message():
     print("Testing cmac of block with zero length:")
     print("---------------------------------------")
     key = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
-    final_block = (0x00000000, 0x00000000, 0x00000000, 0x00000000)
+#    final_block = (0x00000000, 0x00000000, 0x00000000, 0x00000000)
+    final_block = (0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff)
     k2 = (0xf7ddac30, 0x6ae266cc, 0xf90bc11e, 0xe46d513b)
 
     paddded_block = pad_block(final_block, 0)
