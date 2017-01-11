@@ -60,7 +60,7 @@ from aes import *
 VERBOSE = False
 R128 = (0, 0, 0, 0x00000087)
 MAX128 = ((2**128) - 1)
-AES_BLOC_LENGTH = 128
+AES_BLOCK_LENGTH = 128
 
 
 #-------------------------------------------------------------------
@@ -175,6 +175,7 @@ def cmac_gen_subkeys(key):
 def cmac(key, message, final_length):
 # Start by generating the subkeys
     (K1, K2) = cmac_gen_subkeys(key)
+    print("Subkeys generated.")
     state = (0x00000000, 0x00000000, 0x00000000, 0x00000000)
     blocks = len(message)
 
@@ -189,7 +190,11 @@ def cmac(key, message, final_length):
     else:
         for i in range(blocks - 1):
             state = xor_words(state, message[i])
-            M = aes_encipher_block(key, state)
+            print("state before aes block %d:" % (i + 1))
+            print_block(state)
+            state = aes_encipher_block(key, state)
+            print("state after aes block %d:" % (i + 1))
+            print_block(state)
 
         if (final_length == AES_BLOCK_LENGTH):
             tweak = xor_words(K1, message[(blocks - 1)])
@@ -201,8 +206,13 @@ def cmac(key, message, final_length):
             tweak = xor_words(K2, padded_block)
             print("tweak incomplete final block")
             print_block(tweak)
-            state = xor_words(state, tweak)
-            M = aes_encipher_block(key, state)
+
+        state = xor_words(state, tweak)
+        print("state before aes final block:")
+        print_block(state)
+        M = aes_encipher_block(key, state)
+        print("state after aes final block:")
+        print_block(M)
 
     return M
 
@@ -300,23 +310,69 @@ def test_final():
 def test_cmac():
     print("Testing complete cmac:")
     print("----------------------")
-    print("128 bit key tests.")
+
+    # 128 bit key tests.
     nist_key128  = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
+    print("128 bit key, zero length message.")
     expect_1_128 = (0xbb1d6929, 0xe9593728, 0x7fa37d12, 0x9b756746)
-    message = ()
+    message = []
     final_length = 0
     result = cmac(nist_key128, message, final_length)
     check_block(expect_1_128, result)
     print("")
 
-    print("256 bit key tests.")
+
+    print("128 bit key, one block message.")
+    expect_2_128 = (0x070a16b4, 0x6b4d4144, 0xf79bdd9d, 0xd04a287c)
+    message = [(0x6bc1bee2, 0x2e409f96, 0xe93d7e11, 0x7393172a)]
+    final_length = 128
+    result = cmac(nist_key128, message, final_length)
+    check_block(expect_2_128, result)
+    print("")
+
+
+    print("128 bit key, one and a quart message.")
+    expect_3_128 = (0x7d85449e, 0xa6ea19c8, 0x23a7bf78, 0x837dfade)
+    message = [(0x6bc1bee2, 0x2e409f96, 0xe93d7e11, 0x7393172a),
+               (0xae2d8a57, 0x00000000, 0x00000000, 0x00000000)]
+    final_length = 32
+    result = cmac(nist_key128, message, final_length)
+    check_block(expect_3_128, result)
+    print("")
+
+
+    print("128 bit key, four block message.")
+    expect_4_128 = (0x51f0bebf, 0x7e3b9d92, 0xfc497417, 0x79363cfe)
+    message = [(0x6bc1bee2, 0x2e409f96, 0xe93d7e11, 0x7393172a),
+               (0xae2d8a57, 0x1e03ac9c, 0x9eb76fac, 0x45af8e51),
+               (0x30c81c46, 0xa35ce411, 0xe5fbc119, 0x1a0a52ef),
+               (0xf69f2445, 0xdf4f9b17, 0xad2b417b, 0xe66c3710)]
+    final_length = 128
+    result = cmac(nist_key128, message, final_length)
+    check_block(expect_4_128, result)
+    print("")
+
+
+    # 256 bit key tests.
     nist_key256 = (0x603deb10, 0x15ca71be, 0x2b73aef0, 0x857d7781,
                    0x1f352c07, 0x3b6108d7, 0x2d9810a3, 0x0914dff4)
+    print("256 bit key, zero length message.")
     expect_1_256 = (0x028962f6, 0x1b7bf89e, 0xfc6b551f, 0x4667d983)
-    message = ()
+    message = []
     final_length = 0
     result = cmac(nist_key256, message, final_length)
     check_block(expect_1_256, result)
+
+
+    print("256 bit key, four block message.")
+    expect_2_256 = (0xe1992190, 0x549f6ed5, 0x696a2c05, 0x6c315410)
+    message = [(0x6bc1bee2, 0x2e409f96, 0xe93d7e11, 0x7393172a),
+               (0xae2d8a57, 0x1e03ac9c, 0x9eb76fac, 0x45af8e51),
+               (0x30c81c46, 0xa35ce411, 0xe5fbc119, 0x1a0a52ef),
+               (0xf69f2445, 0xdf4f9b17, 0xad2b417b, 0xe66c3710)]
+    final_length = 128
+    result = cmac(nist_key256, message, final_length)
+    check_block(expect_2_256, result)
 
 
 #-------------------------------------------------------------------
