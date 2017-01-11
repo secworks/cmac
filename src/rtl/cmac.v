@@ -164,7 +164,6 @@ module cmac(
   wire           core_keylen;
   reg  [127 : 0] core_block;
   wire [127 : 0] core_result;
-  wire           core_valid;
 
   reg [1 : 0]    bmux_ctrl;
 
@@ -198,7 +197,7 @@ module cmac(
 
                 .block(core_block),
                 .result(core_result),
-                .result_valid(core_valid)
+                .result_valid()
                );
 
 
@@ -378,7 +377,7 @@ module cmac(
       // Padding of final block. We create a mask that preserves
       // the data in the block and zeroises all other bits.
       // We add a one to bit at the first non-data position.
-      mask = 127'b0;
+      mask = 128'b0;
       if (final_size_reg[0])
         mask = {1'b1, mask[127 :  1]};
 
