@@ -76,6 +76,3 @@ block messages. Padding has been verified. The CMAC ICV generation works
 with 128 and 256 bit keys.
 
 The Core has been implemented in hardware (Altera and Xilinx FPGAs).
-
-TODO:
-- Python model is working but not complete and needs cleanup.
