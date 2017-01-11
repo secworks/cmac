@@ -62,6 +62,7 @@ R128 = (0, 0, 0, 0x00000087)
 MAX128 = ((2**128) - 1)
 AES_BLOC_LENGTH = 128
 
+
 #-------------------------------------------------------------------
 # check_block()
 #
@@ -207,21 +208,6 @@ def cmac(key, message, final_length):
 
 
 #-------------------------------------------------------------------
-# test_cmac()
-#
-#-------------------------------------------------------------------
-def test_cmac():
-    print("Testing complete cmac:")
-    print("----------------------")
-    nist_key128  = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
-    expect_1_128 = (0xbb1d6929, 0xe9593728, 0x7fa37d12, 0x9b756746)
-    message = ()
-    final_length = 0
-    result = cmac(nist_key128, message, final_length)
-    check_block(expect_1_128, result)
-
-
-#-------------------------------------------------------------------
 # test_xor()
 #-------------------------------------------------------------------
 def test_xor():
@@ -230,8 +216,6 @@ def test_xor():
     b = (0xdeadbeef, 0xaa00aa00, 0x55555555, 0xffffffff)
     c = xor_words(a , b)
     print_block(c)
-
-
 
 
 #-------------------------------------------------------------------
@@ -252,22 +236,6 @@ def test_cmac_subkey_gen():
     check_block(K1, nist_exp_k1)
     print("Checking key K2")
     check_block(K2, nist_exp_k2)
-
-
-#-------------------------------------------------------------------
-# test_final()
-#
-# Test final tweak.
-#-------------------------------------------------------------------
-def test_final():
-    print("Testing final block. Basically an empty message:")
-    key = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
-    final_block = (0x80000000, 0x00000000, 0x00000000, 0x00000000)
-    k2 =          (0xf7ddac30, 0x6ae266cc, 0xf90bc11e, 0xe46d513b)
-    tweaked_final = xor_words(final_block, k2)
-    M = aes_encipher_block(key, tweaked_final)
-    expected = (0xbb1d6929, 0xe9593728, 0x7fa37d12, 0x9b756746)
-    check_block(expected, M)
 
 
 #-------------------------------------------------------------------
@@ -307,6 +275,48 @@ def test_padding():
         print("num bits: %03d" % num_bits, end=": ")
         print_block(padded)
     print()
+
+
+#-------------------------------------------------------------------
+# test_final()
+#
+# Test final tweak.
+#-------------------------------------------------------------------
+def test_final():
+    print("Testing final block. Basically an empty message:")
+    key = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
+    final_block = (0x80000000, 0x00000000, 0x00000000, 0x00000000)
+    k2 =          (0xf7ddac30, 0x6ae266cc, 0xf90bc11e, 0xe46d513b)
+    tweaked_final = xor_words(final_block, k2)
+    M = aes_encipher_block(key, tweaked_final)
+    expected = (0xbb1d6929, 0xe9593728, 0x7fa37d12, 0x9b756746)
+    check_block(expected, M)
+
+
+#-------------------------------------------------------------------
+# test_cmac()
+#
+#-------------------------------------------------------------------
+def test_cmac():
+    print("Testing complete cmac:")
+    print("----------------------")
+    print("128 bit key tests.")
+    nist_key128  = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
+    expect_1_128 = (0xbb1d6929, 0xe9593728, 0x7fa37d12, 0x9b756746)
+    message = ()
+    final_length = 0
+    result = cmac(nist_key128, message, final_length)
+    check_block(expect_1_128, result)
+    print("")
+
+    print("256 bit key tests.")
+    nist_key256 = (0x603deb10, 0x15ca71be, 0x2b73aef0, 0x857d7781,
+                   0x1f352c07, 0x3b6108d7, 0x2d9810a3, 0x0914dff4)
+    expect_1_256 = (0x028962f6, 0x1b7bf89e, 0xfc6b551f, 0x4667d983)
+    message = ()
+    final_length = 0
+    result = cmac(nist_key256, message, final_length)
+    check_block(expect_1_256, result)
 
 
 #-------------------------------------------------------------------
