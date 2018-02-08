@@ -51,26 +51,32 @@ TB_TOP_SRC =../src/tb/tb_cmac.v
 PADDING_SRC=../src/model/verilog/cmac_padding.v
 
 CC=iverilog
+CC_FLAGS= -Wall
+
 LINT=verilator
+LINTFLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 
 
 all: padding.sim top.sim
 
 top.sim: $(TB_TOP_SRC) $(TOP_SRC)
-	$(CC) -o top.sim $(TB_TOP_SRC) $(TOP_SRC)
+	$(CC) $(CC_FLAGS) -o top.sim $(TB_TOP_SRC) $(TOP_SRC)
 
 
 padding.sim: $(PADDING_SRC)
-	$(CC) -o padding.sim $(PADDING_SRC)
+	$(CC) $(CC_FLAGS) -o padding.sim $(PADDING_SRC)
+
 
 sim-top: top.sim
 	./top.sim
 
+
 sim-padding: padding.sim
 	./padding.sim
 
-lint:
-	verilator +1364-2001ext+ --lint-only -Wall $(TOP_SRC)
+
+lint: $(TOP_SRC)
+	$(CC) $(CC_FLAGS) $(TOP_SRC)
 
 
 clean:
@@ -86,7 +92,9 @@ help:
 	@echo "all:          Build all simulation targets."
 	@echo "lint:         Lint all rtl source files."
 	@echo "top.sim:      Build top level simulation target."
+	@echo "padding.sim:  Build padding target."
 	@echo "sim-top:      Run top level simulation."
+	@echo "sim-padding:  Run padding simulation."
 	@echo "clean:        Delete all built files."
 
 #===================================================================
