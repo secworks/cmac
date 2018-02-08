@@ -160,6 +160,7 @@ module cmac(
   reg            core_next;
   wire           core_encdec;
   wire           core_ready;
+  wire           core_valid;
   wire [255 : 0] core_key;
   wire           core_keylen;
   reg  [127 : 0] core_block;
@@ -197,7 +198,7 @@ module cmac(
 
                 .block(core_block),
                 .result(core_result),
-                .result_valid()
+                .result_valid(core_valid)
                );
 
 
