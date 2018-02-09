@@ -50,11 +50,11 @@ TB_TOP_SRC =../src/tb/tb_cmac.v
 
 PADDING_SRC=../src/model/verilog/cmac_padding.v
 
-CC=iverilog
-CC_FLAGS= -Wall
+CC = iverilog
+CC_FLAGS = -Wall
 
-LINT=verilator
-LINTFLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
+LINT = verilator
+LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 
 
 all: padding.sim top.sim
@@ -76,7 +76,7 @@ sim-padding: padding.sim
 
 
 lint: $(TOP_SRC)
-	$(CC) $(CC_FLAGS) $(TOP_SRC)
+	$(LINT) $(LINT_FLAGS) $(TOP_SRC)
 
 
 clean:
