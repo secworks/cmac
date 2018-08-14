@@ -39,7 +39,7 @@ Note that the core expects information about number of bits in the final
 message block [1..128]. The core performs padding and tweak based on
 this information. The final block and the lenght shall be written to the
 core and then the _finalize_ signal shall be asserted. The core will
-process the final block and then rainse _ready_ and _valid_ signalling
+process the final block and then raise _ready_ and _valid_ signalling
 that the ICV result is ready and valid.
 
 Note that the core does not provide verification of a given ICV. The
