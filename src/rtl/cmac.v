@@ -121,8 +121,6 @@ module cmac(
   wire [127 : 0] core_block;
   wire [127 : 0] core_result;
 
-  reg [1 : 0]    bmux_ctrl;
-
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.

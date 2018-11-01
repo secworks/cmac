@@ -122,6 +122,10 @@ module cmac_core(
   //----------------------------------------------------------------
   assign aes_encdec = 1'h1;
 
+  assign result = result_reg;
+  assign ready  = ready_reg;
+  assign valid  = valid_reg;
+
 
   //----------------------------------------------------------------
   // AES core instantiation.
