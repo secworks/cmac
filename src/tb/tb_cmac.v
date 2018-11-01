@@ -182,16 +182,16 @@ module tb_cmac();
                dut.init_reg, dut.next_reg, dut.finalize_reg);
       $display("config: keylength = 0x%01x, final blocklength = 0x%01x",
                dut.keylen_reg, dut.final_size_reg);
-      $display("k1 = 0x%016x, k2 = 0x%016x", dut.k1_reg, dut.k2_reg);
+      $display("k1 = 0x%016x, k2 = 0x%016x", dut.cmac_inst.k1_reg, dut.cmac_inst.k2_reg);
       $display("ready = 0x%01x, valid = 0x%01x, result_we = 0x%01x, block_mux = 0x%02x, ctrl_state = 0x%02x",
-               dut.ready_reg, dut.valid_reg, dut.result_we, dut.bmux_ctrl, dut.cmac_ctrl_reg);
+               dut.core_ready, dut.core_valid, dut.cmac_inst.result_we, dut.cmac_inst.bmux_ctrl, dut.cmac_inst.cmac_ctrl_reg);
       $display("block:  0x%08x%08x%08x%08x",
                dut.block_reg[0], dut.block_reg[1], dut.block_reg[2], dut.block_reg[3]);
-      $display("tweaked_block: 0x%032x", dut.cmac_datapath.tweaked_block);
-      $display("result: 0x%032x", dut.result_reg);
+      $display("tweaked_block: 0x%032x", dut.cmac_inst.cmac_datapath.tweaked_block);
+      $display("result: 0x%032x", dut.core_result);
       $display("");
-      $display("core_init = 0x%01x, core_next = 0x%01x, core_ready = 0x%01x, core_valid = 0x%01x",
-               dut.core_init, dut.core_next, dut.core_ready, dut.core_valid);
+      $display("init = 0x%01x, next = 0x%01x, core_ready = 0x%01x, core_valid = 0x%01x",
+               dut.init_reg, dut.next_reg, dut.core_ready, dut.core_valid);
       $display("core block:  0x%032x", dut.core_block);
       $display("core result: 0x%032x", dut.core_result);
       $display("");
@@ -472,21 +472,21 @@ module tb_cmac();
           end
         end
 
-      if (dut.k1_reg != 128'h0)
+      if (dut.cmac_inst.k1_reg != 128'h0)
         begin
           $display("TC1: ERROR - k1_reg not properly reset.");
           tc_correct = 0;
           inc_error_ctr();
         end
 
-      if (dut.k2_reg != 128'h0)
+      if (dut.cmac_inst.k2_reg != 128'h0)
         begin
           $display("TC1: ERROR - k2_reg not properly reset.");
           tc_correct = 0;
           inc_error_ctr();
         end
 
-      if (dut.result_reg != 128'h0)
+      if (dut.cmac_inst.result_reg != 128'h0)
         begin
           $display("TC1: ERROR - result_reg not properly reset.");
           tc_correct = 0;
@@ -507,14 +507,14 @@ module tb_cmac();
           inc_error_ctr();
         end
 
-      if (dut.valid_reg != 0)
+      if (dut.cmac_inst.valid_reg != 0)
         begin
           $display("TC1: ERROR - valid_reg not properly reset.");
           tc_correct = 0;
           inc_error_ctr();
         end
 
-      if (dut.ready_reg != 1)
+      if (dut.cmac_inst.ready_reg != 1)
         begin
           $display("TC1: ERROR - ready_reg not properly reset.");
           tc_correct = 0;
@@ -575,16 +575,16 @@ module tb_cmac();
           $display("TC2: k1 = 0x%032x, k2 = 0x%032x", dut.k1_reg, dut.k2_reg);
         end
 
-      if (dut.k1_reg != 128'hfbeed618_35713366_7c85e08f_7236a8de)
+      if (dut.cmac_inst.k1_reg != 128'hfbeed618_35713366_7c85e08f_7236a8de)
         begin
-          $display("TC2: ERROR - K1 incorrect. Expected 0xfbeed618_35713366_7c85e08f_7236a8de, got 0x%032x.", dut.k1_reg);
+          $display("TC2: ERROR - K1 incorrect. Expected 0xfbeed618_35713366_7c85e08f_7236a8de, got 0x%032x.", dut.cmac_inst.k1_reg);
           tc_correct = 0;
           inc_error_ctr();
         end
 
-      if (dut.k2_reg != 128'hf7ddac30_6ae266cc_f90bc11e_e46d513b)
+      if (dut.cmac_inst.k2_reg != 128'hf7ddac30_6ae266cc_f90bc11e_e46d513b)
         begin
-          $display("TC2: ERROR - K2 incorrect. Expected 0x7ddac30_6ae266cc_f90bc11e_e46d513b, got 0x%032x.", dut.k2_reg);
+          $display("TC2: ERROR - K2 incorrect. Expected 0x7ddac30_6ae266cc_f90bc11e_e46d513b, got 0x%032x.", dut.cmac_inst.k2_reg);
           tc_correct = 0;
           inc_error_ctr();
         end

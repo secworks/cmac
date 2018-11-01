@@ -36,19 +36,26 @@
 #
 #===================================================================
 
+# AES sources needed.
 AES_CORE_SW_DIR=../../aes/src/rtl
-
 SBOX_SRC=$(AES_CORE_SW_DIR)/aes_sbox.v
 INV_SBOX_SRC=$(AES_CORE_SW_DIR)/aes_inv_sbox.v
 KEYMEM_SRC=$(AES_CORE_SW_DIR)/aes_key_mem.v
 ENCIPHER_SRC=$(AES_CORE_SW_DIR)/aes_encipher_block.v
 DECIPHER_SRC=$(AES_CORE_SW_DIR)/aes_decipher_block.v
-CORE_SRC=$(AES_CORE_SW_DIR)/aes_core.v $(KEYMEM_SRC) $(SBOX_SRC) $(INV_SBOX_SRC) $(ENCIPHER_SRC) $(DECIPHER_SRC)
+AES_CORE_SRC=$(AES_CORE_SW_DIR)/aes_core.v $(KEYMEM_SRC) $(SBOX_SRC) $(INV_SBOX_SRC) $(ENCIPHER_SRC) $(DECIPHER_SRC)
+
+
+CORE_SRC=../src/rtl/cmac_core.v $(AES_CORE_SRC)
+TB_CORE_SRC =../src/tb/tb_cmac_core.v
+
 
 TOP_SRC=../src/rtl/cmac.v $(CORE_SRC)
 TB_TOP_SRC =../src/tb/tb_cmac.v
 
+
 PADDING_SRC=../src/model/verilog/cmac_padding.v
+
 
 CC = iverilog
 CC_FLAGS = -Wall
@@ -58,6 +65,7 @@ LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 
 
 all: padding.sim top.sim
+
 
 top.sim: $(TB_TOP_SRC) $(TOP_SRC)
 	$(CC) $(CC_FLAGS) -o top.sim $(TB_TOP_SRC) $(TOP_SRC)

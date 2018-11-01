@@ -53,7 +53,7 @@ module cmac_core(
 
                  input wire [127 : 0]  block,
 
-                 output wire [127 : 0] result
+                 output wire [127 : 0] result,
                  output wire           ready,
                  output wire           valid
                 );
@@ -106,8 +106,6 @@ module cmac_core(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  reg [31 : 0]   tmp_read_data;
-
   reg            aes_init;
   reg            aes_next;
   wire           aes_encdec;
@@ -122,11 +120,7 @@ module cmac_core(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign read_data = tmp_read_data;
-
   assign aes_encdec = 1'h1;
-
-  assign aes_keylen = keylen_reg;
 
 
   //----------------------------------------------------------------
@@ -163,8 +157,8 @@ module cmac_core(
           k1_reg         <= 128'h0;
           k2_reg         <= 128'h0;
           result_reg     <= 128'h0;
-          valid_reg      <= 0;
-          ready_reg      <= 1;
+          valid_reg      <= 1'h0;
+          ready_reg      <= 1'h1;
           cmac_ctrl_reg  <= CTRL_IDLE;
         end
       else
@@ -208,17 +202,17 @@ module cmac_core(
 
       // Handle result reg updates and clear
       if (reset_result_reg)
-        result_we  = 1;
+        result_we  = 1'h1;
 
       if (update_result_reg)
         begin
-          result_new = core_result;
-          result_we  = 1;
+          result_new = aes_result;
+          result_we  = 1'h1;
         end
 
       // Generation of subkey k1 and k2.
-      k1_new = {core_result[126 : 0], 1'b0};
-      if (core_result[127])
+      k1_new = {aes_result[126 : 0], 1'b0};
+      if (aes_result[127])
         k1_new = k1_new ^ R128;
 
       k2_new = {k1_new[126 : 0], 1'b0};
@@ -230,51 +224,51 @@ module cmac_core(
       // the data in the block and zeroises all other bits.
       // We add a one to bit at the first non-data position.
       mask = 128'b0;
-      if (final_size_reg[0])
+
+      if (final_size[0])
         mask = {1'b1, mask[127 :  1]};
 
-      if (final_size_reg[1])
+      if (final_size[1])
         mask = {2'h3, mask[127 :  2]};
 
-      if (final_size_reg[2])
+      if (final_size[2])
         mask = {4'hf, mask[127 :  4]};
 
-      if (final_size_reg[3])
+      if (final_size[3])
         mask = {8'hff, mask[127 :  8]};
 
-      if (final_size_reg[4])
+      if (final_size[4])
         mask = {16'hffff, mask[127 :  16]};
 
-      if (final_size_reg[5])
+      if (final_size[5])
         mask = {32'hffffffff, mask[127 :  32]};
 
-      if (final_size_reg[6])
+      if (final_size[6])
         mask = {64'hffffffff_ffffffff, mask[127 :  64]};
 
-      masked_block = {block_reg[0], block_reg[1], block_reg[2], block_reg[3]} & mask;
+      masked_block = block & mask;
       padded_block = masked_block;
-      padded_block[(127 - final_size_reg[6 : 0])] = 1'b1;
+      padded_block[(127 - final_size[6 : 0])] = 1'b1;
 
 
       // Tweak of final block. Based on if the final block is full or not.
-      if (final_size_reg == AES_BLOCK_SIZE)
-        tweaked_block = k1_reg ^ {block_reg[0], block_reg[1], block_reg[2], block_reg[3]};
+      if (final_size == AES_BLOCK_SIZE)
+        tweaked_block = k1_reg ^ block;
       else
         tweaked_block = k2_reg ^ padded_block;
 
 
       // Input mux for the AES core.
-      core_block = 128'h0;
+      aes_block = 128'h0;
       case (bmux_ctrl)
         BMUX_ZERO:
-          core_block = 128'h0;
+          aes_block = 128'h0;
 
         BMUX_MESSAGE:
-          core_block  = result_reg ^ {block_reg[0], block_reg[1],
-                                      block_reg[2], block_reg[3]};
+          aes_block  = result_reg ^ block;
 
         BMUX_TWEAK:
-          core_block  = result_reg ^ tweaked_block;
+          aes_block  = result_reg ^ tweaked_block;
       endcase // case (bmux_ctrl)
     end
 
@@ -308,7 +302,7 @@ module cmac_core(
                 ready_we         = 1'h1;
                 valid_new        = 1'h0;
                 valid_we         = 1'h1;
-                core_init        = 1'h1;
+                aes_init         = 1'h1;
                 reset_result_reg = 1'h1;
                 cmac_ctrl_new    = CTRL_INIT_CORE;
                 cmac_ctrl_we     = 1'h1;
@@ -318,7 +312,7 @@ module cmac_core(
               begin
                 ready_new     = 1'h0;
                 ready_we      = 1'h1;
-                core_next     = 1'h1;
+                aes_next      = 1'h1;
                 bmux_ctrl     = BMUX_MESSAGE;
                 cmac_ctrl_new = CTRL_NEXT_BLOCK;
                 cmac_ctrl_we  = 1'h1;
@@ -328,7 +322,7 @@ module cmac_core(
               begin
                 ready_new     = 1'h0;
                 ready_we      = 1'h1;
-                core_next     = 1'h1;
+                aes_next      = 1'h1;
                 bmux_ctrl     = BMUX_TWEAK;
                 cmac_ctrl_new = CTRL_FINAL_BLOCK;
                 cmac_ctrl_we  = 1'h1;
@@ -339,7 +333,7 @@ module cmac_core(
           begin
             if (aes_ready)
               begin
-                core_next     = 1'h1;
+                aes_next      = 1'h1;
                 bmux_ctrl     = BMUX_ZERO;
                 cmac_ctrl_new = CTRL_GEN_SUBKEYS;
                 cmac_ctrl_we  = 1'h1;
@@ -348,7 +342,7 @@ module cmac_core(
 
         CTRL_GEN_SUBKEYS:
           begin
-            if (core_ready)
+            if (aes_ready)
               begin
                 ready_new     = 1'h1;
                 ready_we      = 1'h1;
@@ -387,6 +381,8 @@ module cmac_core(
           end
 
         default:
+          begin
+          end
       endcase // case (cmac_ctrl_reg)
     end
 

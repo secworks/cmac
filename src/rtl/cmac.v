@@ -115,14 +115,10 @@ module cmac(
   //----------------------------------------------------------------
   reg [31 : 0]   tmp_read_data;
 
-  reg            core_init;
-  reg            core_next;
-  wire           core_encdec;
   wire           core_ready;
   wire           core_valid;
   wire [255 : 0] core_key;
-  wire           core_keylen;
-  reg  [127 : 0] core_block;
+  wire [127 : 0] core_block;
   wire [127 : 0] core_result;
 
   reg [1 : 0]    bmux_ctrl;
@@ -136,7 +132,8 @@ module cmac(
   assign core_key = {key_reg[0], key_reg[1], key_reg[2], key_reg[3],
                      key_reg[4], key_reg[5], key_reg[6], key_reg[7]};
 
-  assign core_keylen = keylen_reg;
+  assign core_block  = {block_reg[0], block_reg[1],
+                        block_reg[2], block_reg[3]};
 
 
   //----------------------------------------------------------------
@@ -156,7 +153,7 @@ module cmac(
 
                       .block(core_block),
 
-                      .result(core_result)
+                      .result(core_result),
                       .ready(core_ready),
                       .valid(core_valid)
                      );
@@ -180,12 +177,11 @@ module cmac(
           for (i = 0; i < 8; i = i + 1)
             key_reg[i] <= 32'h0;
 
-          keylen_reg     <= 0;
+          keylen_reg     <= 1'h0;
           final_size_reg <= 8'h0;
-          result_reg     <= 128'h0;
-          init_reg       <= 0;
-          next_reg       <= 0;
-          finalize_reg   <= 0;
+          init_reg       <= 1'h0;
+          next_reg       <= 1'h0;
+          finalize_reg   <= 1'h0;
         end
       else
         begin
@@ -217,13 +213,13 @@ module cmac(
   //----------------------------------------------------------------
   always @*
     begin : api
-      init_new      = 0;
-      next_new      = 0;
-      finalize_new  = 0;
-      final_size_we = 0;
-      config_we     = 0;
-      key_we        = 0;
-      block_we      = 0;
+      init_new      = 1'h0;
+      next_new      = 1'h0;
+      finalize_new  = 1'h0;
+      final_size_we = 1'h0;
+      config_we     = 1'h0;
+      key_we        = 1'h0;
+      block_we      = 1'h0;
       tmp_read_data = 32'h0;
 
       if (cs)
@@ -231,10 +227,10 @@ module cmac(
           if (we)
             begin
               if ((address >= ADDR_KEY0) && (address <= ADDR_KEY7))
-                key_we = 1;
+                key_we = 1'h1;
 
               if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK3))
-                block_we = 1;
+                block_we = 1'h1;
 
               case (address)
                 ADDR_CTRL:
@@ -244,8 +240,8 @@ module cmac(
                     finalize_new = write_data[CTRL_FINAL_BIT];
                   end
 
-                ADDR_CONFIG:     config_we     = 1;
-                ADDR_FINAL_SIZE: final_size_we = 1;
+                ADDR_CONFIG:     config_we     = 1'h1;
+                ADDR_FINAL_SIZE: final_size_we = 1'h1;
 
                 default:
                   begin
@@ -260,12 +256,12 @@ module cmac(
                 ADDR_NAME1:      tmp_read_data = CORE_NAME1;
                 ADDR_VERSION:    tmp_read_data = CORE_VERSION;
                 ADDR_CTRL:       tmp_read_data = {31'h0, keylen_reg};
-                ADDR_STATUS:     tmp_read_data = {30'h0, valid_reg, ready_reg};
+                ADDR_STATUS:     tmp_read_data = {30'h0, core_valid, core_ready};
                 ADDR_FINAL_SIZE: tmp_read_data = {24'h0, final_size_reg};
-                ADDR_RESULT0:    tmp_read_data = result_reg[127 : 96];
-                ADDR_RESULT1:    tmp_read_data = result_reg[95 : 64];
-                ADDR_RESULT2:    tmp_read_data = result_reg[63 : 32];
-                ADDR_RESULT3:    tmp_read_data = result_reg[31 : 0];
+                ADDR_RESULT0:    tmp_read_data = core_result[127 : 96];
+                ADDR_RESULT1:    tmp_read_data = core_result[95 : 64];
+                ADDR_RESULT2:    tmp_read_data = core_result[63 : 32];
+                ADDR_RESULT3:    tmp_read_data = core_result[31 : 0];
 
                 default:
                   begin
