@@ -280,7 +280,7 @@ module cmac_core(
   //----------------------------------------------------------------
   // cmac_ctrl
   //
-  // The FSM controlling the cmacm functionality.
+  // The FSM controlling the cmac functionality.
   //----------------------------------------------------------------
   always @*
     begin : cmac_ctrl
