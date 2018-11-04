@@ -50,41 +50,41 @@ module cmac(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam ADDR_NAME0       = 8'h00;
-  localparam ADDR_NAME1       = 8'h01;
-  localparam ADDR_VERSION     = 8'h02;
+  localparam ADDR_NAME0        = 8'h00;
+  localparam ADDR_NAME1        = 8'h01;
+  localparam ADDR_VERSION      = 8'h02;
 
-  localparam ADDR_CTRL        = 8'h08;
-  localparam CTRL_INIT_BIT    = 0;
-  localparam CTRL_NEXT_BIT    = 1;
-  localparam CTRL_FINAL_BIT   = 2;
+  localparam ADDR_CTRL         = 8'h08;
+  localparam CTRL_INIT_BIT     = 0;
+  localparam CTRL_NEXT_BIT     = 1;
+  localparam CTRL_FINAL_BIT    = 2;
 
-  localparam ADDR_CONFIG      = 8'h09;
-  localparam CTRL_KEYLEN_BIT  = 0;
+  localparam ADDR_CONFIG       = 8'h09;
+  localparam CONFIG_KEYLEN_BIT = 0;
 
-  localparam ADDR_STATUS      = 8'h0a;
-  localparam STATUS_READY_BIT = 0;
-  localparam STATUS_VALID_BIT = 1;
+  localparam ADDR_STATUS       = 8'h0a;
+  localparam STATUS_READY_BIT  = 0;
+  localparam STATUS_VALID_BIT  = 1;
 
-  localparam ADDR_FINAL_SIZE  = 8'h0b;
+  localparam ADDR_FINAL_SIZE   = 8'h0b;
 
-  localparam ADDR_KEY0        = 8'h10;
-  localparam ADDR_KEY7        = 8'h17;
+  localparam ADDR_KEY0         = 8'h10;
+  localparam ADDR_KEY7         = 8'h17;
 
-  localparam ADDR_BLOCK0      = 8'h20;
-  localparam ADDR_BLOCK1      = 8'h21;
-  localparam ADDR_BLOCK2      = 8'h22;
-  localparam ADDR_BLOCK3      = 8'h23;
+  localparam ADDR_BLOCK0       = 8'h20;
+  localparam ADDR_BLOCK1       = 8'h21;
+  localparam ADDR_BLOCK2       = 8'h22;
+  localparam ADDR_BLOCK3       = 8'h23;
 
-  localparam ADDR_RESULT0     = 8'h30;
-  localparam ADDR_RESULT1     = 8'h31;
-  localparam ADDR_RESULT2     = 8'h32;
-  localparam ADDR_RESULT3     = 8'h33;
+  localparam ADDR_RESULT0      = 8'h30;
+  localparam ADDR_RESULT1      = 8'h31;
+  localparam ADDR_RESULT2      = 8'h32;
+  localparam ADDR_RESULT3      = 8'h33;
 
 
-  localparam CORE_NAME0       = 32'h636d6163; // "cmac"
-  localparam CORE_NAME1       = 32'h2d616573; // "-aes"
-  localparam CORE_VERSION     = 32'h302e3031; // "0.01"
+  localparam CORE_NAME0        = 32'h636d6163; // "cmac"
+  localparam CORE_NAME1        = 32'h2d616573; // "-aes"
+  localparam CORE_VERSION      = 32'h302e3032; // "0.02"
 
 
   //----------------------------------------------------------------
@@ -189,7 +189,7 @@ module cmac(
 
           if (config_we)
             begin
-              keylen_reg <= write_data[CTRL_KEYLEN_BIT];
+              keylen_reg <= write_data[CONFIG_KEYLEN_BIT];
             end
 
           if (final_size_we)
