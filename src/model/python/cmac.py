@@ -197,12 +197,12 @@ def cmac(key, message, final_length):
             print_block(state)
 
         if (final_length == AES_BLOCK_LENGTH):
-            tweak = xor_words(K1, message[(blocks - 1)])
+            tweak = xor_words(K1, message[-1])
             print("tweak complete final block")
             print_block(tweak)
 
         else:
-            padded_block = pad_block(message[(blocks - 1)], final_length)
+            padded_block = pad_block(message[- 1], final_length)
             tweak = xor_words(K2, padded_block)
             print("tweak incomplete final block")
             print_block(tweak)
