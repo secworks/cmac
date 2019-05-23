@@ -51,7 +51,7 @@ import sys
 
 # Note this assumes that the aes implementation is either in the
 # same dir or symlinked.
-from aes import *
+from aes import AES
 
 
 #-------------------------------------------------------------------
@@ -69,15 +69,16 @@ AES_BLOCK_LENGTH = 128
 # Check and report if a result block matches expected block.
 #-------------------------------------------------------------------
 def check_block(expected, result):
+    my_aes = AES()
     if (expected[0] == result[0]) and  (expected[1] == result[1]) and\
          (expected[2] == result[2]) and  (expected[3] == result[3]):
         print("OK. Result matches expected.")
     else:
         print("ERROR. Result does not match expected.")
         print("Expected:")
-        print_block(expected)
+        my_aes.print_block(expected)
         print("Got:")
-        print_block(result)
+        my_aes.print_block(result)
         print("")
 
 
@@ -128,7 +129,8 @@ def pad_block(block, bitlen):
 # Generate subkeys K1 and K2.
 #-------------------------------------------------------------------
 def cmac_gen_subkeys(key):
-    L = aes_encipher_block(key, (0, 0, 0, 0))
+    my_aes = AES()
+    L = my_aes.aes_encipher_block(key, (0, 0, 0, 0))
 
     Pre_K1 = shift_words(L)
     MSBL = (L[0] >> 31) & 0x01
@@ -173,7 +175,9 @@ def cmac_gen_subkeys(key):
 # blocks and final_length is number of bits in the final block
 #-------------------------------------------------------------------
 def cmac(key, message, final_length):
-# Start by generating the subkeys
+    my_aes = AES()
+
+    # Start by generating the subkeys
     (K1, K2) = cmac_gen_subkeys(key)
     print("Subkeys generated.")
     state = (0x00000000, 0x00000000, 0x00000000, 0x00000000)
@@ -184,35 +188,35 @@ def cmac(key, message, final_length):
         paddded_block = pad_block(state, 0)
         tweak = xor_words(paddded_block, K2)
         print("tweak empty block")
-        print_block(tweak)
-        M = aes_encipher_block(key, tweak)
+        my_aes.print_block(tweak)
+        M = my_aes.aes_encipher_block(key, tweak)
 
     else:
         for i in range(blocks - 1):
             state = xor_words(state, message[i])
             print("state before aes block %d:" % (i + 1))
-            print_block(state)
-            state = aes_encipher_block(key, state)
+            my_aes.print_block(state)
+            state = my_aes.aes_encipher_block(key, state)
             print("state after aes block %d:" % (i + 1))
-            print_block(state)
+            my_aes.print_block(state)
 
         if (final_length == AES_BLOCK_LENGTH):
             tweak = xor_words(K1, message[-1])
             print("tweak complete final block")
-            print_block(tweak)
+            my_aes.print_block(tweak)
 
         else:
             padded_block = pad_block(message[- 1], final_length)
             tweak = xor_words(K2, padded_block)
             print("tweak incomplete final block")
-            print_block(tweak)
+            my_aes.print_block(tweak)
 
         state = xor_words(state, tweak)
         print("state before aes final block:")
-        print_block(state)
-        M = aes_encipher_block(key, state)
+        my_aes.print_block(state)
+        M = my_aes.aes_encipher_block(key, state)
         print("state after aes final block:")
-        print_block(M)
+        my_aes.print_block(M)
 
     return M
 
@@ -221,11 +225,12 @@ def cmac(key, message, final_length):
 # test_xor()
 #-------------------------------------------------------------------
 def test_xor():
+    my_aes = AES()
     print("*** Testing XOR words ***")
     a = (0x00000000, 0x55555555, 0xaaaaaaaa, 0xff00ff00)
     b = (0xdeadbeef, 0xaa00aa00, 0x55555555, 0xffffffff)
     c = xor_words(a , b)
-    print_block(c)
+    my_aes.print_block(c)
 
 
 #-------------------------------------------------------------------
@@ -254,6 +259,7 @@ def test_cmac_subkey_gen():
 # Test final tweak.
 #-------------------------------------------------------------------
 def test_zero_length_message():
+    my_aes = AES()
     print("Testing cmac of block with zero length:")
     print("---------------------------------------")
     key = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
@@ -262,11 +268,11 @@ def test_zero_length_message():
 
     paddded_block = pad_block(final_block, 0)
     tweak = xor_words(paddded_block, k2)
-    M = aes_encipher_block(key, tweak)
+    M = my_aes.aes_encipher_block(key, tweak)
     print("padded final block")
-    print_block(paddded_block)
+    my_aes.print_block(paddded_block)
     print("tweak empty block")
-    print_block(tweak)
+    my_aes.print_block(tweak)
 
     expected = (0xbb1d6929, 0xe9593728, 0x7fa37d12, 0x9b756746)
     check_block(expected, M)
@@ -277,13 +283,14 @@ def test_zero_length_message():
 # test_padding()
 #-------------------------------------------------------------------
 def test_padding():
+    my_aes = AES()
     print("Testing padding of block based on number of data bits in block:")
     print("---------------------------------------------------------------")
     block = (0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff)
     for num_bits in range(128):
         padded = pad_block(block, num_bits)
         print("num bits: %03d" % num_bits, end=": ")
-        print_block(padded)
+        my_aes.print_block(padded)
     print()
 
 
@@ -293,12 +300,13 @@ def test_padding():
 # Test final tweak.
 #-------------------------------------------------------------------
 def test_final():
+    my_aes = AES()
     print("Testing final block. Basically an empty message:")
     key = (0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c)
     final_block = (0x80000000, 0x00000000, 0x00000000, 0x00000000)
     k2 =          (0xf7ddac30, 0x6ae266cc, 0xf90bc11e, 0xe46d513b)
     tweaked_final = xor_words(final_block, k2)
-    M = aes_encipher_block(key, tweaked_final)
+    M = my_aes.aes_encipher_block(key, tweaked_final)
     expected = (0xbb1d6929, 0xe9593728, 0x7fa37d12, 0x9b756746)
     check_block(expected, M)
 
