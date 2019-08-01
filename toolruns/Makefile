@@ -64,11 +64,15 @@ LINT = verilator
 LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 
 
-all: padding.sim top.sim
+all: padding.sim top.sim core.sim
 
 
 top.sim: $(TB_TOP_SRC) $(TOP_SRC)
 	$(CC) $(CC_FLAGS) -o top.sim $(TB_TOP_SRC) $(TOP_SRC)
+
+
+core.sim: $(TB_CORE_SRC) $(CORE_SRC)
+	$(CC) $(CC_FLAGS) -o core.sim $(TB_CORE_SRC) $(CORE_SRC)
 
 
 padding.sim: $(PADDING_SRC)
@@ -77,6 +81,10 @@ padding.sim: $(PADDING_SRC)
 
 sim-top: top.sim
 	./top.sim
+
+
+sim-core: core.sim
+	./core.sim
 
 
 sim-padding: padding.sim
@@ -89,19 +97,22 @@ lint: $(TOP_SRC)
 
 clean:
 	rm -f top.sim
+	rm -f core.sim
 	rm -f padding.sim
 
 
 help:
-	@echo "Build system for simulation of AES Verilog core"
+	@echo "Build system for simulation of AES CMAC Verilog core"
 	@echo ""
 	@echo "Supported targets:"
 	@echo "------------------"
 	@echo "all:          Build all simulation targets."
 	@echo "lint:         Lint all rtl source files."
 	@echo "top.sim:      Build top level simulation target."
+	@echo "core.sim:     Build core level simulation target."
 	@echo "padding.sim:  Build padding target."
 	@echo "sim-top:      Run top level simulation."
+	@echo "sim-core:     Run core level simulation."
 	@echo "sim-padding:  Run padding simulation."
 	@echo "clean:        Delete all built files."
 
