@@ -43,8 +43,7 @@ module tb_cmac_core();
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam DEBUG = 0;
-
+  localparam DEBUG = 1;
 
   localparam CLK_HALF_PERIOD = 1;
   localparam CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
@@ -106,6 +105,7 @@ module tb_cmac_core();
   reg [31 : 0]  error_ctr;
   reg [31 : 0]  tc_ctr;
   reg           tc_correct;
+  reg           debug_ctrl;
 
   reg [31 : 0]  read_data;
   reg [127 : 0] result_data;
@@ -122,11 +122,6 @@ module tb_cmac_core();
   wire [127 : 0] tb_result;
   wire           tb_ready;
   wire           tb_valid;
-  reg            tb_cs;
-  reg            tb_we;
-  reg [7  : 0]   tb_address;
-  reg [31 : 0]   tb_write_data;
-  wire [31 : 0]  tb_read_data;
 
 
   //----------------------------------------------------------------
@@ -178,7 +173,7 @@ module tb_cmac_core();
 
       #(CLK_PERIOD);
 
-      if (DEBUG)
+      if (debug_ctrl)
         begin
           dump_dut_state();
         end
@@ -198,9 +193,8 @@ module tb_cmac_core();
                dut.init, dut.next, dut.finalize);
       $display("config: keylength = 0x%01x, final_size = 0x%01x",
                dut.keylen, dut.final_size);
-      $display("block:  0x%08x%08x%08x%08x",
-               dut.block);
-      $display("result: 0x%032x", dut.result);
+      $display("block = 0x%032x, ready = 0x%01x, result =  0x%032x",
+               dut.block, dut.ready, dut.result);
 
       $display("Internal states:");
       $display("k1 = 0x%016x, k2 = 0x%016x", dut.k1_reg, dut.k2_reg);
@@ -259,9 +253,17 @@ module tb_cmac_core();
       cycle_ctr     = 0;
       error_ctr     = 0;
       tc_ctr        = 0;
+      debug_ctrl    = 0;
 
-      tb_clk        = 0;
-      tb_reset_n    = 1;
+      tb_clk        = 1'h0;
+      tb_reset_n    = 1'h1;
+      tb_key        = 256'h0;
+      tb_keylen     = 1'h0;
+      tb_final_size = 8'h0;
+      tb_init       = 1'h0;
+      tb_next       = 1'h0;
+      tb_finalize   = 1'h0;
+      tb_block      = 128'h0;
     end
   endtask // init_sim
 
@@ -307,97 +309,121 @@ module tb_cmac_core();
         #(CLK_PERIOD);
     end
   endtask // wait_ready
-//
-//
-//  //----------------------------------------------------------------
-//  // tc2_gen_subkeys
-//  //
-//  // Check that subkeys k1 and k2 are correctly generated.
-//  // The keys and test vectors are from NIST SP 800-38B, D.1.
-//  //----------------------------------------------------------------
-//  task tc2_gen_subkeys;
-//    begin : tc2
-//      inc_tc_ctr();
-//      tc_correct = 1;
-//
-//      $display("TC2: Check that k1 and k2 subkeys are correctly generated.");
-//      init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
-//               AES_128_BIT_KEY);
-//      wait_ready();
-//
-//      if (DEBUG)
-//        begin
-//          $display("TC2: core_result[127] = 0x%01x, k1_new[127] = 0x%01x",
-//                   dut.core_result[127], dut.k1_new[127]);
-//          $display("TC2: k1 = 0x%032x, k2 = 0x%032x", dut.k1_reg, dut.k2_reg);
-//        end
-//
-//      if (dut.k1_reg != 128'hfbeed618_35713366_7c85e08f_7236a8de)
-//        begin
-//          $display("TC2: ERROR - K1 incorrect. Expected 0xfbeed618_35713366_7c85e08f_7236a8de, got 0x%032x.", dut.k1_reg);
-//          tc_correct = 0;
-//          inc_error_ctr();
-//        end
-//
-//      if (dut.k2_reg != 128'hf7ddac30_6ae266cc_f90bc11e_e46d513b)
-//        begin
-//          $display("TC2: ERROR - K2 incorrect. Expected 0x7ddac30_6ae266cc_f90bc11e_e46d513b, got 0x%032x.", dut.k2_reg);
-//          tc_correct = 0;
-//          inc_error_ctr();
-//        end
-//
-//      if (tc_correct)
-//        $display("TC2: SUCCESS - K1 and K2 subkeys correctly generated.");
-//      else
-//        $display("TC2: NO SUCCESS - Subkeys not correctly generated.");
-//      $display("");
-//    end
-//  endtask // tc2
 
 
-//  //----------------------------------------------------------------
-//  // tc3_empty_message
-//  //
-//  // Check that the correct ICV is generated for an empty message.
-//  // The keys and test vectors are from the NIST spec, RFC 4493.
-//  //----------------------------------------------------------------
-//  task tc3_empty_message;
-//    begin : tc3
-//      integer i;
-//
-//      inc_tc_ctr();
-//      tc_correct = 1;
-//
-//      $display("TC3: Check that correct ICV is generated for an empty message.");
-//
-//      init_key(256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000,
-//               AES_128_BIT_KEY);
-//      wait_ready();
-//
-//      $display("TC3: cmac_core initialized. Now for the final, empty message block.");
-//
-//      write_word(ADDR_FINAL_SIZE, 32'h0);
-//      write_word(ADDR_CTRL, (2 ** CTRL_FINAL_BIT));
-//      wait_ready();
-//
-//      $display("TC3: cmac_core finished.");
-//      read_result();
-//
-//      if (result_data != 128'hbb1d6929e95937287fa37d129b756746)
-//        begin
-//          tc_correct = 0;
-//          inc_error_ctr();
-//          $display("TC3: Error - Expected 0xbb1d6929e95937287fa37d129b756746, got 0x%032x",
-//                   result_data);
-//        end
-//
-//      if (tc_correct)
-//        $display("TC3: SUCCESS - ICV for empty message correctly generated.");
-//      else
-//        $display("TC3: NO SUCCESS - ICV for empty message not correctly generated.");
-//      $display("");
-//    end
-//  endtask // tc3
+  //----------------------------------------------------------------
+  // tc1_reset_state
+  //
+  // Check that registers in the dut are being correctly reset.
+  //----------------------------------------------------------------
+  task tc1_reset_state;
+    begin : tc1
+      inc_tc_ctr();
+      debug_ctrl = 1;
+      $display("TC1: Check that the dut registers are correctly reset.");
+      #(2 * CLK_PERIOD);
+      reset_dut();
+      #(2 * CLK_PERIOD);
+    end
+  endtask // tc1_reset_state
+
+
+  //----------------------------------------------------------------
+  // tc2_gen_subkeys
+  //
+  // Check that subkeys k1 and k2 are correctly generated.
+  // The keys and test vectors are from NIST SP 800-38B, D.1.
+  //----------------------------------------------------------------
+  task tc2_gen_subkeys;
+    begin : tc2
+      inc_tc_ctr();
+      tc_correct = 1;
+
+      debug_ctrl = 1;
+
+      $display("TC2: Check that k1 and k2 subkeys are correctly generated.");
+      tb_key    = 256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000;
+      tb_keylen = 1'h0;
+      tb_init   = 1'h1;
+      #(2 * CLK_PERIOD);
+      tb_init   = 1'h0;
+      wait_ready();
+
+      #(2 * CLK_PERIOD);
+      debug_ctrl = 0;
+
+      if (dut.k1_reg != 128'hfbeed618_35713366_7c85e08f_7236a8de)
+        begin
+          $display("TC2: ERROR - K1 incorrect. Expected 0xfbeed618_35713366_7c85e08f_7236a8de, got 0x%032x.", dut.k1_reg);
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
+      if (dut.k2_reg != 128'hf7ddac30_6ae266cc_f90bc11e_e46d513b)
+        begin
+          $display("TC2: ERROR - K2 incorrect. Expected 0x7ddac30_6ae266cc_f90bc11e_e46d513b, got 0x%032x.", dut.k2_reg);
+          tc_correct = 0;
+          inc_error_ctr();
+        end
+
+      if (tc_correct)
+        $display("TC2: SUCCESS - K1 and K2 subkeys correctly generated.");
+      else
+        $display("TC2: NO SUCCESS - Subkeys not correctly generated.");
+      $display("");
+    end
+  endtask // tc2
+
+
+  //----------------------------------------------------------------
+  // tc3_empty_message
+  //
+  // Check that the correct ICV is generated for an empty message.
+  // The keys and test vectors are from the NIST spec, RFC 4493.
+  //----------------------------------------------------------------
+  task tc3_empty_message;
+    begin : tc3
+      integer i;
+
+      inc_tc_ctr();
+      tc_correct = 1;
+      debug_ctrl = 1;
+
+      $display("TC3: Check that correct ICV is generated for an empty message.");
+
+      tb_key    = 256'h2b7e1516_28aed2a6_abf71588_09cf4f3c_00000000_00000000_00000000_00000000;
+      tb_keylen = 1'h0;
+      tb_init   = 1'h1;
+      #(2 * CLK_PERIOD);
+      tb_init   = 1'h0;
+      wait_ready();
+
+      $display("TC3: cmac_core initialized. Now for the final, empty message block.");
+      tb_final_size = 8'h0;
+      tb_finalize = 1'h1;
+      #(2 * CLK_PERIOD);
+      tb_finalize = 1'h0;
+      wait_ready();
+
+      #(2 * CLK_PERIOD);
+      debug_ctrl = 0;
+
+      $display("TC3: cmac_core finished.");
+      if (tb_result != 128'hbb1d6929e95937287fa37d129b756746)
+        begin
+          tc_correct = 0;
+          inc_error_ctr();
+          $display("TC3: Error - Expected 0xbb1d6929e95937287fa37d129b756746, got 0x%032x",
+                   tb_result);
+        end
+
+      if (tc_correct)
+        $display("TC3: SUCCESS - ICV for empty message correctly generated.");
+      else
+        $display("TC3: NO SUCCESS - ICV for empty message not correctly generated.");
+      $display("");
+    end
+  endtask // tc3
 
 
 //  //----------------------------------------------------------------
@@ -626,10 +652,9 @@ module tb_cmac_core();
       $display("");
 
       init_sim();
-
-//      tc1_check_reset();
-//      tc2_gen_subkeys();
-//      tc3_empty_message();
+      tc1_reset_state();
+      tc2_gen_subkeys();
+      tc3_empty_message();
 //      tc4_single_block_message();
 //      tc5_two_and_a_half_block_message();
 //      tc6_four_block_message();
