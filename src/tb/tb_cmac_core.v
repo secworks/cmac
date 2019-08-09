@@ -684,6 +684,59 @@ module tb_cmac_core();
 
 
   //----------------------------------------------------------------
+  // tc8_single_block_all_zero_message
+  //
+  // Check that we can get the correct ICV when using the test
+  // vector key from RFC5297 and a single block all zero message.
+  //----------------------------------------------------------------
+  task tc8_single_block_all_zero_message;
+    begin : tc8_single_block_all_zero_message
+      integer i;
+
+      inc_tc_ctr();
+      tc_correct = 1;
+      debug_ctrl = 1;
+
+      $display("TC8: Check that correct ICV is generated for a single block, all zero message.");
+
+      tb_key    = 256'hfffefdfc_fbfaf9f8_f7f6f5f4_f3f2f1f0_f0f1f2f3_f4f5f6f7_f8f9fafb_fcfdfeff;
+      tb_keylen = 1'h0;
+      tb_init   = 1'h1;
+      #(2 * CLK_PERIOD);
+      tb_init   = 1'h0;
+      wait_ready();
+
+      $display("TC4: cmac_core initialized. Now for the final, full message block.");
+
+      tb_block      = 128'h0;
+      tb_final_size = AES_BLOCK_SIZE;
+      tb_finalize   = 1'h1;
+      #(2 * CLK_PERIOD);
+      tb_finalize = 1'h0;
+      wait_ready();
+
+      #(2 * CLK_PERIOD);
+      debug_ctrl = 0;
+
+      $display("TC8: cmac_core finished.");
+      if (tb_result != 128'h0e04dfaf_c1efbf04_01405828_59bf073a)
+        begin
+          tc_correct = 0;
+          inc_error_ctr();
+          $display("TC8: Error - Expected 0x0e04dfaf_c1efbf04_01405828_59bf073a, got 0x%032x",
+                   tb_result);
+        end
+
+      if (tc_correct)
+        $display("TC8: SUCCESS - ICV for single block message correctly generated.");
+      else
+        $display("TC8: NO SUCCESS - ICV for single block message not correctly generated.");
+      $display("");
+    end
+  endtask // tc8_single_block_all_zero_message
+
+
+  //----------------------------------------------------------------
   // main
   //
   // The main test functionality.
@@ -702,6 +755,7 @@ module tb_cmac_core();
       tc5_two_and_a_half_block_message();
       tc6_four_block_message();
       tc7_key256_four_block_message();
+      tc8_single_block_all_zero_message();
 
       display_test_results();
 
