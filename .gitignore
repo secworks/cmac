@@ -21,6 +21,9 @@ test*
 /toolruns/libero
 /toolruns/icestorm
 
+## Link for aes.py
+/src/model/python/aes.py
+
 #=======================================================================
 # EOF .gitignore
 #=======================================================================
