@@ -1,14 +1,7 @@
 cmac
 ====
-## Introduction ##
 Verilog implementation of the block cipher based keyed hash function
-CMAC. CMAC is specified in the NIST document
-[SP 800-38 B](http://csrc.nist.gov/publications/nistpubs/800-38B/SP_800-38B.pdf)
-and used in [RFC 4493](https://tools.ietf.org/html/rfc4493). Wikipedia has [a good summary of CMAC too.](https://en.wikipedia.org/wiki/One-key_MAC)
-
-This implementation uses the
-[AES block cipher](https://github.com/secworks/aes) with support for 128
-and 256 bit keys. The ICV generated is 128 bit.
+CMAC.
 
 
 ## Status ##
@@ -18,6 +11,24 @@ block messages. Padding has been verified. The CMAC ICV generation works
 with 128 or 256 bit keys.
 
 The Core has been implemented in hardware (Altera and Xilinx FPGAs).
+
+
+## Introduction ##
+This is a Verilog implementation of the block cipher based keyed hash function
+CMAC as specfied in the NIST document
+[SP 800-38 B](http://csrc.nist.gov/publications/nistpubs/800-38B/SP_800-38B.pdf)
+and used in [RFC 4493](https://tools.ietf.org/html/rfc4493). Wikipedia has [a good summary of CMAC too.](https://en.wikipedia.org/wiki/One-key_MAC)
+
+This implementation uses the
+[AES block cipher](https://github.com/secworks/aes) with support for 128
+and 256 bit keys. The ICV generated is 128 bit.
+
+
+### Contact information ##
+Assured provides customer support including customization, integration
+and system development related to the core. For more informantion,
+please contact [Assured Security
+Consultants](https://www.assured.se/contact).
 
 
 ## Functionality ##
